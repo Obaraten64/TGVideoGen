@@ -1,0 +1,104 @@
+services:
+
+  mysql:
+    image: mysql:8.4
+    container_name: burmalda-mysql
+    restart: unless-stopped
+
+    environment:
+      MYSQL_DATABASE: burmalda
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+
+    ports:
+      - "3306:3306"
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p${MYSQL_ROOT_PASSWORD}"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: burmalda-phpmyadmin
+    restart: unless-stopped
+
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+
+    ports:
+      - "8081:80"
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+
+  bot-manager:
+    build:
+      context: ./bot-manager
+
+    container_name: burmalda-bot-manager
+    restart: unless-stopped
+
+    environment:
+      SPRING_DATASOURCE_URL: ${SQL_LINK}
+      SPRING_DATASOURCE_USERNAME: ${SQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${SQL_PASSWORD}
+      SPRING_DATASOURCE_DRIVER: ${SQL_DRIVER}
+      MANAGER_BOT_TOKEN: ${MANAGER_BOT_TOKEN}
+      MANAGER_BOT_USERNAME: ${MANAGER_BOT_USERNAME}
+      MANAGED_BOT_ADJECTIVE: ${MANAGED_BOT_ADJECTIVE}
+      MANAGED_BOT_NOUN: ${MANAGED_BOT_NOUN}
+      RUNTIME_WEBHOOK_BASE_URL: ${RUNTIME_WEBHOOK_BASE_URL}
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+
+  bot-runtime:
+    build:
+      context: ./bot-runtime
+
+    container_name: burmalda-bot-runtime
+    restart: unless-stopped
+
+    ports:
+      - "8080:8080"
+
+    environment:
+      SPRING_DATASOURCE_URL: ${SQL_LINK}
+      SPRING_DATASOURCE_USERNAME: ${SQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${SQL_PASSWORD}
+      SPRING_DATASOURCE_DRIVER: ${SQL_DRIVER}
+      MANAGER_BOT_TOKEN: ${MANAGER_BOT_TOKEN}
+      AI_CALLBACK_URL: ${AI_CALLBACK_URL}
+      AI_API_BASE_URL: ${AI_API_BASE_URL}
+      AI_API_KEY: ${AI_API_KEY}
+      AI_STORAGE_URL: ${AI_STORAGE_URL}
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+
+volumes:
+  mysql_data:
