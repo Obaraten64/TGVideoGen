@@ -7,9 +7,9 @@ services:
 
     environment:
       MYSQL_DATABASE: burmalda
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${SQL_USER}
+      MYSQL_PASSWORD: ${SQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${SQL_ROOT_PASSWORD}
 
     ports:
       - "3306:3306"
@@ -27,7 +27,7 @@ services:
           "localhost",
           "-u",
           "root",
-          "-p${MYSQL_ROOT_PASSWORD}"
+          "-p${SQL_ROOT_PASSWORD}"
         ]
       interval: 5s
       timeout: 5s
@@ -53,16 +53,15 @@ services:
 
   bot-manager:
     build:
-      context: ./bot-manager
+      context: ./burmalda-bot-manager
 
     container_name: burmalda-bot-manager
     restart: unless-stopped
 
     environment:
-      SPRING_DATASOURCE_URL: ${SQL_LINK}
-      SPRING_DATASOURCE_USERNAME: ${SQL_USER}
-      SPRING_DATASOURCE_PASSWORD: ${SQL_PASSWORD}
-      SPRING_DATASOURCE_DRIVER: ${SQL_DRIVER}
+      SQL_LINK: ${SQL_LINK}
+      SQL_USER: ${SQL_USER}
+      SQL_PASSWORD: ${SQL_PASSWORD}
       MANAGER_BOT_TOKEN: ${MANAGER_BOT_TOKEN}
       MANAGER_BOT_USERNAME: ${MANAGER_BOT_USERNAME}
       MANAGED_BOT_ADJECTIVE: ${MANAGED_BOT_ADJECTIVE}
@@ -76,7 +75,7 @@ services:
 
   bot-runtime:
     build:
-      context: ./bot-runtime
+      context: ./burmalda-bot-runtime
 
     container_name: burmalda-bot-runtime
     restart: unless-stopped
@@ -85,10 +84,9 @@ services:
       - "8080:8080"
 
     environment:
-      SPRING_DATASOURCE_URL: ${SQL_LINK}
-      SPRING_DATASOURCE_USERNAME: ${SQL_USER}
-      SPRING_DATASOURCE_PASSWORD: ${SQL_PASSWORD}
-      SPRING_DATASOURCE_DRIVER: ${SQL_DRIVER}
+      SQL_LINK: ${SQL_LINK}
+      SQL_USER: ${SQL_USER}
+      SQL_PASSWORD: ${SQL_PASSWORD}
       MANAGER_BOT_TOKEN: ${MANAGER_BOT_TOKEN}
       AI_CALLBACK_URL: ${AI_CALLBACK_URL}
       AI_API_BASE_URL: ${AI_API_BASE_URL}
