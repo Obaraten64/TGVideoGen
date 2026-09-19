@@ -23,7 +23,7 @@ public class ManagedBotUpdateHandler implements TelegramInputHandlerBase {
 
     @Override
     public Optional<SendMessage> handle(Update update) {
-        managedBotService.registerManagedBot(update.getManagedBot().getBot());
+        managedBotService.registerManagedBot(update.getMessage().getManagedBotCreated().getBot());
         return Optional.empty();
     }
 }
