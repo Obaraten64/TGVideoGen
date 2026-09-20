@@ -1,9 +1,11 @@
 package com.burmaldabot.service;
 
 import com.burmaldabot.exception.TelegramFileException;
+import com.burmaldabot.model.bot.BotContext;
 import com.burmaldabot.model.files.TelegramFile;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.objects.File;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -21,13 +23,10 @@ import java.net.http.HttpResponse;
 @Service
 @RequiredArgsConstructor
 public class TelegramFileService {
-    private final String telegramToken;
-    private final TelegramClient telegramClient;
-
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
-    public TelegramFile downloadImage(String fileId, String mimeType) throws TelegramFileException {
-        byte[] content = download(fileId);
+    public TelegramFile downloadImage(String fileId, String mimeType, BotContext context) throws TelegramFileException {
+        byte[] content = download(fileId, context);
         if (!isAnActualImage(content)) {
             throw new TelegramFileException(
                     "Telegram file is not an image: " + fileId
@@ -36,9 +35,9 @@ public class TelegramFileService {
         return new TelegramFile(fileId, mimeType, content);
     }
 
-    private byte[] download(String fileId) {
+    private byte[] download(String fileId, BotContext context) {
         try {
-            String url = resolveTelegramPath(fileId);
+            String url = resolveTelegramPath(fileId, context);
             HttpResponse<byte[]> response = downloadTelegramFile(url);
             return response.body();
         } catch (TelegramApiException | IOException |
@@ -67,14 +66,15 @@ public class TelegramFileService {
         return false;
     }
 
-    private String buildDownloadUrl(String filePath) {
+    private String buildDownloadUrl(String filePath, BotContext context) {
         return "https://api.telegram.org/file/bot"
-                + telegramToken
+                + context.bot().getToken()
                 + "/"
                 + filePath;
     }
 
-    private String resolveTelegramPath(String fileId) throws TelegramApiException {
+    private String resolveTelegramPath(String fileId, BotContext context) throws TelegramApiException {
+        TelegramClient telegramClient = new OkHttpTelegramClient(context.bot().getToken());
         File file = telegramClient.execute(
                 GetFile.builder()
                         .fileId(fileId)
@@ -87,7 +87,7 @@ public class TelegramFileService {
             );
         }
 
-        return buildDownloadUrl(file.getFilePath());
+        return buildDownloadUrl(file.getFilePath(), context);
     }
 
     private HttpResponse<byte[]> downloadTelegramFile(String url) throws IOException,

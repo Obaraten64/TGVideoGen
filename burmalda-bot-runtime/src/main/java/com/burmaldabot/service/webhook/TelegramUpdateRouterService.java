@@ -16,8 +16,6 @@ public class TelegramUpdateRouterService {
     public void route(Long botId, Update update) {
         Bot bot = botService.getActiveBot(botId);
         log.info("Update received for @{}", bot.getUsername());
-
-        // TODO: update to add bot variable
-        telegramHandlerService.consume(update);
+        telegramHandlerService.consume(update, bot);
     }
 }

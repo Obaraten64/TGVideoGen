@@ -1,9 +1,8 @@
 package com.burmaldabot.input.impl;
 
-import com.burmaldabot.service.StorageFileService;
-import com.burmaldabot.service.TelegramFileService;
-import com.burmaldabot.service.KieFileService;
-import com.burmaldabot.service.KieVideoService;
+import com.burmaldabot.config.AiRequestConfig;
+import com.burmaldabot.model.bot.BotContext;
+import com.burmaldabot.service.*;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Document;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
@@ -13,8 +12,9 @@ import java.util.Optional;
 @Component
 public class PhotoDocumentInputHandler extends PhotoInputHandlerBase {
     public PhotoDocumentInputHandler(TelegramFileService tfc, KieFileService kfc,
-                                     KieVideoService kvs, StorageFileService sfs) {
-        super(tfc, kfc, kvs, sfs);
+                                     KieVideoService kvs, StorageFileService sfs,
+                                     AiTaskService ats, AiRequestConfig arc) {
+        super(tfc, kfc, kvs, sfs, ats, arc);
     }
 
     @Override
@@ -23,10 +23,10 @@ public class PhotoDocumentInputHandler extends PhotoInputHandlerBase {
     }
 
     @Override
-    public Optional<String> handle(Message message) {
+    public Optional<String> handle(Message message, BotContext context) {
         Document document = message.getDocument();
-        String url = getTelegramPhotoLink(document.getFileId(), document.getMimeType());
-        requestVideo(url, message.getChatId().toString());
+        String url = getTelegramPhotoLink(document.getFileId(), document.getMimeType(), context);
+        requestVideo(url, context);
         return  Optional.of("Give us a minute to handle your photo");
     }
 
