@@ -14,11 +14,11 @@ import org.springframework.web.bind.annotation.*;
 public class KieCallbackController {
     private final KieCallbackService kieCallbackService;
 
-    @PostMapping("/callback/{chatId}")
-    public ResponseEntity<Void> callback(@PathVariable String chatId, @RequestBody KieCallback payload) {
-        log.info("Handling video response from AI and user {}", chatId);
+    @PostMapping("/callback/")
+    public ResponseEntity<Void> callback( @RequestBody KieCallback payload) {
+        log.info("Handling video response from AI");
 
-        kieCallbackService.handle(payload, chatId);
+        kieCallbackService.handle(payload);
 
         return ResponseEntity.ok().build();
     }

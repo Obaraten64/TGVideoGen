@@ -4,6 +4,7 @@ import com.burmaldabot.dto.request.wan.WanVideoInput;
 import com.burmaldabot.dto.request.wan.WanVideoRequest;
 import com.burmaldabot.dto.response.wan.WanVideoResponse;
 import com.burmaldabot.exception.KieApiException;
+import com.burmaldabot.model.ai.AiTaskContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,7 +16,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -30,24 +30,20 @@ public class KieVideoService {
     @Value("${kie.api.key}")
     private final String aiApiKey;
 
-    public String createImageToVideo(
-            String imageUrl,
-            String prompt,
-            String chatId
-    ) {
+    public String createImageToVideo(AiTaskContext aiTaskContext) {
         WanVideoInput input = new WanVideoInput(
-                prompt,
-                List.of(imageUrl),
-                "480P",
+                aiTaskContext.prompt(),
+                aiTaskContext.url(),
+                aiTaskContext.resolution(),
                 "adaptive",
-                10,
-                true,
+                aiTaskContext.duration(),
+                false,
                 false
         );
 
         WanVideoRequest request = new WanVideoRequest(
                 "wan/3-0-video",
-                callbackUrl + chatId,
+                callbackUrl,
                 input
         );
 

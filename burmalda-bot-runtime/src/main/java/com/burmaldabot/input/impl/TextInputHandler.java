@@ -1,6 +1,7 @@
 package com.burmaldabot.input.impl;
 
 import com.burmaldabot.input.TelegramInputHandlerBase;
+import com.burmaldabot.model.bot.BotContext;
 import com.burmaldabot.service.CommandService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -19,7 +20,7 @@ public class TextInputHandler implements TelegramInputHandlerBase {
     }
 
     @Override
-    public Optional<String> handle(Message message) {
+    public Optional<String> handle(Message message, BotContext context) {
         return commandService.handleMessage(message.getText());
     }
 }

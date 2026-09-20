@@ -1,8 +1,10 @@
 package com.burmaldabot.telegram;
 
+import com.burmaldabot.model.bot.BotContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
@@ -15,12 +17,11 @@ import java.io.ByteArrayInputStream;
 @RequiredArgsConstructor
 @Slf4j
 public class TelegramSender {
-    private final TelegramClient telegramClient;
-
-    public void sendMessage(String messageText, long chatId) {
+    public void sendMessage(String messageText, BotContext context) {
+        TelegramClient telegramClient = new OkHttpTelegramClient(context.bot().getToken());
         SendMessage messageToSend = SendMessage
                 .builder()
-                .chatId(chatId)
+                .chatId(context.chatId())
                 .text(messageText)
                 .build();
         try {
@@ -30,9 +31,10 @@ public class TelegramSender {
         }
     }
 
-    public void sendDocument(long chatId, byte[] file, String fileName) {
+    public void sendDocument(BotContext context, byte[] file, String fileName) {
+        TelegramClient telegramClient = new OkHttpTelegramClient(context.bot().getToken());
         SendDocument sendDocument = SendDocument.builder()
-                .chatId(chatId)
+                .chatId(context.chatId())
                 .document(
                         new InputFile(
                                 new ByteArrayInputStream(file),
