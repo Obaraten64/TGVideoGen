@@ -1,6 +1,8 @@
 package com.burmaldabot.flow.handler;
 
 import com.burmaldabot.flow.CallbackQueryHandler;
+import com.burmaldabot.flow.FlowResponseService;
+import com.burmaldabot.flow.UserFlowState;
 import com.burmaldabot.flow.session.BotUserSession;
 import com.burmaldabot.model.bot.BotContext;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 
 import java.util.Map;
+import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
@@ -16,6 +19,7 @@ import java.util.Map;
 public class TemplateCallbackHandler implements CallbackQueryHandler {
 
     private final VideoGenerationDispatcherService dispatcherService;
+    private final FlowResponseService responseService;
 
     private static final Map<String, String> TEMPLATE_PROMPTS = Map.of(
             "tpl:cyberpunk", "cyberpunk style, neon lights, futuristic city atmosphere, volumetric lighting, high quality 8k",
@@ -30,9 +34,23 @@ public class TemplateCallbackHandler implements CallbackQueryHandler {
     }
 
     @Override
+    public Set<UserFlowState> getAllowedStates() {
+        return Set.of(UserFlowState.INPUTTING_PROMPT);
+    }
+
+    @Override
     public void handleCallback(BotContext context, BotUserSession session, CallbackQuery callbackQuery) {
         String data = callbackQuery.getData();
         String prompt = TEMPLATE_PROMPTS.getOrDefault(data, "cinematic atmosphere, high quality");
+
+        if (callbackQuery.getMessage() != null) {
+            responseService.clearInlineMarkup(
+                    context,
+                    callbackQuery.getMessage().getMessageId(),
+                    "✅ Выбран шаблон стиля"
+            );
+        }
+
         dispatcherService.startGeneration(context, session, prompt);
     }
 }

@@ -1,5 +1,6 @@
 package com.burmaldabot.flow.handler;
 
+import com.burmaldabot.flow.FlowResponseService;
 import com.burmaldabot.flow.UserFlowState;
 import com.burmaldabot.flow.UserFlowStepHandler;
 import com.burmaldabot.flow.session.BotUserSession;
@@ -24,6 +25,7 @@ public class CollectingPhotosStepHandler implements UserFlowStepHandler {
     private final UserSessionService sessionService;
     private final TelegramKeyboardFactory keyboardFactory;
     private final TelegramSender telegramSender;
+    private final FlowResponseService responseService;
 
     @Override
     public UserFlowState getSupportedState() {
@@ -53,9 +55,9 @@ public class CollectingPhotosStepHandler implements UserFlowStepHandler {
         if (message.hasText() && message.getText().contains("Подтвердить")) {
             List<String> photos = session.getPhotoFileIds();
             if (photos == null || photos.isEmpty()) {
-                telegramSender.sendMessage(
+                responseService.sendValidationError(
                         context,
-                        "⚠️ Пожалуйста, отправьте хотя бы 1 фото перед подтверждением.",
+                        "Пожалуйста, отправьте хотя бы 1 фото перед подтверждением.",
                         keyboardFactory.createPhotoCollectionReplyKeyboard(0)
                 );
                 return;
@@ -75,9 +77,11 @@ public class CollectingPhotosStepHandler implements UserFlowStepHandler {
             telegramSender.sendMessage(
                     context,
                     String.format(
-                            "✍️ **Получено %d фото.**\n\n" +
-                                    "Введите текстовый промпт сообщением в чат (опишите, что должно происходить на видео),\n" +
-                                    "или выберите один из готовых стилей ниже:",
+                            """
+                                    ✍️ **Получено %d фото.**
+                                    
+                                    Введите текстовый промпт сообщением в чат (опишите, что должно происходить на видео),
+                                    или выберите один из готовых стилей ниже:""",
                             photos.size()
                     ),
                     keyboardFactory.createPromptTemplatesKeyboard()
@@ -93,9 +97,9 @@ public class CollectingPhotosStepHandler implements UserFlowStepHandler {
                     .orElse(photoSizes.get(photoSizes.size() - 1));
 
             if (session.getPhotoFileIds().size() >= 10) {
-                telegramSender.sendMessage(
+                responseService.sendValidationError(
                         context,
-                        "⚠️ Загружено максимальное количество фото (10 шт).\nНажмите «✅ Подтвердить» ниже:",
+                        "Загружено максимальное количество фото (10 шт).\nНажмите «✅ Подтвердить» ниже:",
                         keyboardFactory.createPhotoCollectionReplyKeyboard(session.getPhotoFileIds().size())
                 );
                 return;
@@ -113,10 +117,10 @@ public class CollectingPhotosStepHandler implements UserFlowStepHandler {
             return;
         }
 
-        // Unsupported message type in this state
-        telegramSender.sendMessage(
+        // Unsupported message type in this state: always preserve the reply keyboard
+        responseService.sendValidationError(
                 context,
-                "⚠️ Пожалуйста, отправьте фотографию или нажмите «Подтвердить» внизу:",
+                "Пожалуйста, отправьте фотографию или нажмите «Подтвердить» внизу:",
                 keyboardFactory.createPhotoCollectionReplyKeyboard(session.getPhotoFileIds().size())
         );
     }

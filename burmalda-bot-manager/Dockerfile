@@ -6,6 +6,7 @@ COPY gradlew .
 COPY gradle ./gradle
 COPY build.gradle .
 COPY settings.gradle .
+COPY lombok.config ./
 
 RUN chmod +x gradlew
 

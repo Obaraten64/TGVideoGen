@@ -1,6 +1,7 @@
 package com.burmaldabot.flow.handler;
 
 import com.burmaldabot.config.AiRequestConfig;
+import com.burmaldabot.flow.FlowResponseService;
 import com.burmaldabot.flow.economy.UserBalanceService;
 import com.burmaldabot.flow.economy.VideoPricing;
 import com.burmaldabot.flow.session.BotUserSession;
@@ -37,6 +38,7 @@ public class VideoGenerationDispatcherService {
     private final UserSessionService sessionService;
     private final TelegramKeyboardFactory keyboardFactory;
     private final TelegramSender telegramSender;
+    private final FlowResponseService responseService;
 
     public void startGeneration(BotContext context, BotUserSession session, String prompt) {
         String resolution = session.getSelectedResolution() != null ? session.getSelectedResolution() : "480p";
@@ -45,12 +47,13 @@ public class VideoGenerationDispatcherService {
 
         long totalCost = VideoPricing.calculateTotalCost(resolution, duration, isFree);
 
-        // Balance & Free Trial verification
+        // Atomic Balance & Free Trial verification
         if (isFree) {
-            if (balanceService.hasUsedFreeTrial(context.telegramUserId(), context.bot().getId())) {
-                telegramSender.sendMessage(
+            boolean reserved = balanceService.tryConsumeFreeTrial(context.telegramUserId(), context.bot().getId());
+            if (!reserved) {
+                responseService.sendValidationError(
                         context,
-                        "⚠️ Бесплатная генерация уже использована. Пожалуйста, пополните баланс.",
+                        "Бесплатная генерация уже использована. Пожалуйста, пополните баланс.",
                         keyboardFactory.createProfileKeyboard(false)
                 );
                 session.resetToMenu();
@@ -60,9 +63,9 @@ public class VideoGenerationDispatcherService {
         } else {
             boolean deducted = balanceService.deductTokens(context.telegramUserId(), context.bot().getId(), totalCost);
             if (!deducted) {
-                telegramSender.sendMessage(
+                responseService.sendValidationError(
                         context,
-                        "⚠️ Недостаточно токенов на балансе для запуска генерации.",
+                        "Недостаточно токенов на балансе для запуска генерации.",
                         keyboardFactory.createProfileKeyboard(false)
                 );
                 session.resetToMenu();
@@ -71,6 +74,7 @@ public class VideoGenerationDispatcherService {
             }
         }
 
+        // Keyboard intentionally omitted: transient progress status message before final task submission confirmation
         telegramSender.sendMessage(
                 context,
                 "⏳ **Загружаем фото и подготавливаем генерацию...**",
@@ -100,24 +104,23 @@ public class VideoGenerationDispatcherService {
             String taskId = kieVideoService.createImageToVideo(aiTaskContext);
             aiTaskService.createTask(taskId, context);
 
-            if (isFree) {
-                balanceService.recordFreeTrialUsage(context.telegramUserId(), context.bot().getId());
-            }
-
             session.resetToMenu();
             sessionService.save(session);
 
             telegramSender.sendMessage(
                     context,
                     String.format(
-                            "🚀 **Генерация запущена!**\n\n" +
-                                    "Параметры задачи:\n" +
-                                    "• Разрешение: **%s**\n" +
-                                    "• Длительность: **%d сек**\n" +
-                                    "• Фото: **%d шт**\n" +
-                                    "• Списано: **%d токенов**\n\n" +
-                                    "⏳ Обычно создание видео занимает 1-3 минуты.\n" +
-                                    "Мы пришлем готовый результат прямо в этот диалог!",
+                            """
+                                    🚀 **Генерация запущена!**
+                                    
+                                    Параметры задачи:
+                                    • Разрешение: **%s**
+                                    • Длительность: **%d сек**
+                                    • Фото: **%d шт**
+                                    • Списано: **%d токенов**
+                                    
+                                    ⏳ Обычно создание видео занимает 1-3 минуты.
+                                    Мы пришлем готовый результат прямо в этот диалог!""",
                             resolution,
                             duration,
                             uploadedUrls.size(),
@@ -134,14 +137,13 @@ public class VideoGenerationDispatcherService {
                 balanceService.addTokens(context.telegramUserId(), context.bot().getId(), totalCost);
             }
 
-            telegramSender.sendMessage(
+            // Keep user in current prompt step so their uploaded photos are not lost!
+            responseService.sendValidationError(
                     context,
-                    "❌ Произошла ошибка при запуске генерации. Токены возвращены на баланс. Попробуйте еще раз позже.",
-                    keyboardFactory.createMainMenu()
+                    "Произошла ошибка при отправке задачи в нейросеть. Ваши фото сохранены, а токены возвращены на баланс.\n" +
+                            "Попробуйте ввести другой промпт или выбрать стиль ниже:",
+                    keyboardFactory.createPromptTemplatesKeyboard()
             );
-
-            session.resetToMenu();
-            sessionService.save(session);
         }
     }
 }

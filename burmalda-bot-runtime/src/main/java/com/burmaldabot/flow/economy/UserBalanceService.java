@@ -20,7 +20,14 @@ public class UserBalanceService {
     @Transactional
     public UserBalance getOrCreateBalance(Long telegramUserId, Long botId) {
         return balanceRepository.findByTelegramUserIdAndBotId(telegramUserId, botId)
-                .orElseGet(() -> balanceRepository.save(new UserBalance(telegramUserId, botId, INITIAL_TOKENS)));
+                .orElseGet(() -> {
+                    try {
+                        return balanceRepository.save(new UserBalance(telegramUserId, botId, INITIAL_TOKENS));
+                    } catch (Exception e) {
+                        return balanceRepository.findByTelegramUserIdAndBotId(telegramUserId, botId)
+                                .orElseThrow(() -> new IllegalStateException("Failed to get/create balance", e));
+                    }
+                });
     }
 
     @Transactional(readOnly = true)
@@ -35,14 +42,17 @@ public class UserBalanceService {
         if (tokensToDeduct <= 0) {
             return true;
         }
-        UserBalance balance = getOrCreateBalance(telegramUserId, botId);
-        if (balance.getBalanceTokens() < tokensToDeduct) {
-            return false;
-        }
-        balance.setBalanceTokens(balance.getBalanceTokens() - tokensToDeduct);
-        balance.setUpdatedAt(Instant.now());
-        balanceRepository.save(balance);
-        return true;
+        // Ensure the record exists
+        getOrCreateBalance(telegramUserId, botId);
+
+        // Atomic decrement query prevents race conditions / overdraft
+        int updated = balanceRepository.deductTokensAtomically(
+                telegramUserId,
+                botId,
+                tokensToDeduct,
+                Instant.now()
+        );
+        return updated > 0;
     }
 
     @Transactional
@@ -59,9 +69,16 @@ public class UserBalanceService {
     }
 
     @Transactional
-    public void recordFreeTrialUsage(Long telegramUserId, Long botId) {
-        if (!hasUsedFreeTrial(telegramUserId, botId)) {
-            freeTrialRepository.save(new UserFreeTrial(telegramUserId, botId));
+    public boolean tryConsumeFreeTrial(Long telegramUserId, Long botId) {
+        if (hasUsedFreeTrial(telegramUserId, botId)) {
+            return false;
+        }
+        try {
+            freeTrialRepository.saveAndFlush(new UserFreeTrial(telegramUserId, botId));
+            return true;
+        } catch (Exception e) {
+            log.warn("Concurrent free trial usage detected for user {} on bot {}", telegramUserId, botId);
+            return false;
         }
     }
 }

@@ -5,6 +5,7 @@ import com.burmaldabot.flow.session.UserSessionService;
 import com.burmaldabot.model.bot.BotContext;
 import com.burmaldabot.telegram.TelegramSender;
 import com.burmaldabot.telegram.keyboard.TelegramKeyboardFactory;
+import com.burmaldabot.telegram.util.TelegramTextFormatter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +25,7 @@ public class UserFlowDispatcher {
     private final UserSessionService sessionService;
     private final TelegramKeyboardFactory keyboardFactory;
     private final TelegramSender telegramSender;
+    private final FlowResponseService responseService;
 
     public void dispatchMessage(BotContext context, Message message) {
         BotUserSession session = sessionService.getOrCreate(context);
@@ -38,13 +41,17 @@ public class UserFlowDispatcher {
                         "Главное меню:",
                         keyboardFactory.createRemoveReplyKeyboard()
                 );
+                String response = """
+                        👋 %s
+                        
+                        Создавайте захватывающие видеоролики из ваших фото с помощью нейросетей Wan 3.0.
+                        Выберите действие:
+                        """.formatted(
+                        TelegramTextFormatter.bold("Добро пожаловать в Burmalda AI Video!")
+                );
                 telegramSender.sendMessage(
                         context,
-                        """
-                                👋 **Добро пожаловать в Burmalda AI Video!**
-                                
-                                Создавайте захватывающие видеоролики из ваших фото с помощью нейросетей Wan 3.0.
-                                Выберите действие:""",
+                        response,
                         keyboardFactory.createMainMenu()
                 );
                 return;
@@ -76,18 +83,28 @@ public class UserFlowDispatcher {
         String data = callbackQuery.getData();
         log.info("Dispatching callback query '{}' for user {}", data, context.telegramUserId());
 
-        // Stop button loading animation in Telegram client
-        telegramSender.answerCallbackQuery(context, callbackQuery.getId(), null);
-
         CallbackQueryHandler handler = callbackHandlers.stream()
                 .filter(h -> h.supports(data))
                 .findFirst()
                 .orElse(null);
 
-        if (handler != null) {
-            handler.handleCallback(context, session, callbackQuery);
-        } else {
+        if (handler == null) {
             log.warn("No handler found for callback data: {}", data);
+            telegramSender.answerCallbackQuery(context, callbackQuery.getId(), null);
+            return;
         }
+
+        // Validate state to prevent stale button interactions
+        Set<UserFlowState> allowedStates = handler.getAllowedStates();
+        if (allowedStates != null && !allowedStates.isEmpty() && !allowedStates.contains(session.getState())) {
+            log.warn("Stale callback '{}' rejected: current user state={}, allowed states={}",
+                    data, session.getState(), allowedStates);
+            responseService.sendStaleAlert(context, callbackQuery.getId());
+            return;
+        }
+
+        // Stop button loading animation in Telegram client
+        telegramSender.answerCallbackQuery(context, callbackQuery.getId(), null);
+        handler.handleCallback(context, session, callbackQuery);
     }
 }

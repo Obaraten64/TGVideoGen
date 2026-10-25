@@ -1,5 +1,6 @@
 package com.burmaldabot.flow.handler;
 
+import com.burmaldabot.flow.FlowResponseService;
 import com.burmaldabot.flow.UserFlowState;
 import com.burmaldabot.flow.UserFlowStepHandler;
 import com.burmaldabot.flow.session.BotUserSession;
@@ -21,6 +22,7 @@ public class InputPromptStepHandler implements UserFlowStepHandler {
     private final UserSessionService sessionService;
     private final TelegramKeyboardFactory keyboardFactory;
     private final TelegramSender telegramSender;
+    private final FlowResponseService responseService;
 
     @Override
     public UserFlowState getSupportedState() {
@@ -30,9 +32,9 @@ public class InputPromptStepHandler implements UserFlowStepHandler {
     @Override
     public void handleMessage(BotContext context, BotUserSession session, Message message) {
         if (!message.hasText()) {
-            telegramSender.sendMessage(
+            responseService.sendValidationError(
                     context,
-                    "⚠️ Пожалуйста, введите текстовый промпт сообщением или выберите шаблон стиля кнопкой выше.",
+                    "Пожалуйста, введите текстовый промпт сообщением или выберите шаблон стиля кнопкой ниже:",
                     keyboardFactory.createPromptTemplatesKeyboard()
             );
             return;

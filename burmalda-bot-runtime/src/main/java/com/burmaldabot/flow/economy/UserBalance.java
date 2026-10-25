@@ -32,6 +32,9 @@ public class UserBalance {
     @Column(nullable = false)
     private Long balanceTokens;
 
+    @Version
+    private Long version;
+
     @Column(nullable = false)
     private Instant updatedAt;
 

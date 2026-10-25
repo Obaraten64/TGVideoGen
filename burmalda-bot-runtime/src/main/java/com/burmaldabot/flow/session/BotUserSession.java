@@ -42,6 +42,9 @@ public class BotUserSession {
     @Column(name = "file_id")
     private List<String> photoFileIds = new ArrayList<>();
 
+    @Version
+    private Long version;
+
     private Instant updatedAt;
 
     public BotUserSession(Long botId, Long telegramUserId, Long chatId) {

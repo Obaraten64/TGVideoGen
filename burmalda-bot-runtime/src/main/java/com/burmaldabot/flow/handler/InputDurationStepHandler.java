@@ -1,5 +1,6 @@
 package com.burmaldabot.flow.handler;
 
+import com.burmaldabot.flow.FlowResponseService;
 import com.burmaldabot.flow.UserFlowState;
 import com.burmaldabot.flow.UserFlowStepHandler;
 import com.burmaldabot.flow.economy.UserBalanceService;
@@ -18,11 +19,13 @@ import org.telegram.telegrambots.meta.api.objects.message.Message;
 @RequiredArgsConstructor
 @Slf4j
 public class InputDurationStepHandler implements UserFlowStepHandler {
+    private static final String VALID_SECONDS_REGEX = "^([1-9]|[1-2][0-9]|30)$";
 
     private final UserSessionService sessionService;
     private final UserBalanceService balanceService;
     private final TelegramKeyboardFactory keyboardFactory;
     private final TelegramSender telegramSender;
+    private final FlowResponseService responseService;
 
     @Override
     public UserFlowState getSupportedState() {
@@ -32,35 +35,16 @@ public class InputDurationStepHandler implements UserFlowStepHandler {
     @Override
     public void handleMessage(BotContext context, BotUserSession session, Message message) {
         if (!message.hasText()) {
-            telegramSender.sendMessage(
-                    context,
-                    "⚠️ Пожалуйста, введите длительность видео числом от 1 до 30 секунд или выберите кнопку выше.",
-                    null
-            );
+            sendValidationError(context);
             return;
         }
 
         String text = message.getText().trim();
-        int seconds;
-        try {
-            seconds = Integer.parseInt(text);
-        } catch (NumberFormatException e) {
-            telegramSender.sendMessage(
-                    context,
-                    "⚠️ Некорректное число. Введите число от 1 до 30 (например: 5):",
-                    keyboardFactory.createDurationKeyboard()
-            );
+        if (!text.matches(VALID_SECONDS_REGEX)) {
+            sendValidationError(context);
             return;
         }
-
-        if (seconds < 1 || seconds > 30) {
-            telegramSender.sendMessage(
-                    context,
-                    "⚠️ Длительность видео должна быть от 1 до 30 секунд. Попробуйте еще раз:",
-                    keyboardFactory.createDurationKeyboard()
-            );
-            return;
-        }
+        int seconds = Integer.parseInt(text);
 
         processDuration(context, session, seconds);
     }
@@ -71,13 +55,16 @@ public class InputDurationStepHandler implements UserFlowStepHandler {
         long currentBalance = balanceService.getBalance(context.telegramUserId(), context.bot().getId());
 
         if (currentBalance < totalCost && !Boolean.TRUE.equals(session.getIsFreeTrial())) {
-            telegramSender.sendMessage(
+            responseService.sendValidationError(
                     context,
                     String.format(
-                            "⚠️ **Недостаточно токенов!**\n\n" +
-                                    "Стоимость: **%d токенов** (%d сек × %d ток/с)\n" +
-                                    "Ваш баланс: **%d токенов**\n\n" +
-                                    "Пополните баланс в профиле или выберите меньшую длительность:",
+                            """
+                             **Недостаточно токенов!**
+                             
+                             Стоимость: **%d токенов** (%d сек × %d ток/с)
+                             Ваш баланс: **%d токенов**
+                             
+                             Пополните баланс в профиле или выберите меньшую длительность:""",
                             totalCost,
                             seconds,
                             VideoPricing.getRatePerSecond(resolution),
@@ -95,14 +82,24 @@ public class InputDurationStepHandler implements UserFlowStepHandler {
         telegramSender.sendMessage(
                 context,
                 String.format(
-                        "✅ Длительность: **%d сек** (стоимость: %d токенов).\n\n" +
-                                "📸 **Шаг 3 из 3: Отправьте фото (до 10 шт)**\n" +
-                                "Вы можете отправить до 10 фотографий (по одной или альбомом).\n" +
-                                "Когда закончите, нажмите кнопку «Подтвердить фото» внизу:",
+                        """
+                        ✅ Длительность: **%d сек** (стоимость: %d токенов).
+                        
+                        📸 **Шаг 3 из 3: Отправьте фото (до 10 шт)**
+                        Вы можете отправить до 10 фотографий (по одной или альбомом).
+                        Когда закончите, нажмите кнопку «Подтвердить фото» внизу:""",
                         seconds,
                         totalCost
                 ),
                 keyboardFactory.createPhotoCollectionReplyKeyboard(0)
+        );
+    }
+
+    private void sendValidationError(BotContext context) {
+        telegramSender.sendMessage(
+                context,
+                "Пожалуйста, введите длительность видео числом от 1 до 30 секунд или выберите кнопку ниже:",
+                keyboardFactory.createDurationKeyboard()
         );
     }
 }

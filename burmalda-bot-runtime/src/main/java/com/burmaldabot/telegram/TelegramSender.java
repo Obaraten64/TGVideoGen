@@ -23,6 +23,7 @@ import java.io.ByteArrayInputStream;
 @RequiredArgsConstructor
 @Slf4j
 public class TelegramSender {
+    private static final String DEFAULT_PARSE_MODE = "HTML";
 
     public Message sendMessage(String messageText, BotContext context) {
         return sendMessage(context, messageText, null);
@@ -32,7 +33,8 @@ public class TelegramSender {
         TelegramClient telegramClient = new OkHttpTelegramClient(context.bot().getToken());
         SendMessage.SendMessageBuilder<?, ?> builder = SendMessage.builder()
                 .chatId(context.chatId())
-                .text(messageText);
+                .text(messageText)
+                .parseMode(DEFAULT_PARSE_MODE);
 
         if (replyKeyboard != null) {
             builder.replyMarkup(replyKeyboard);
@@ -51,7 +53,8 @@ public class TelegramSender {
         EditMessageText.EditMessageTextBuilder<?, ?> builder = EditMessageText.builder()
                 .chatId(context.chatId())
                 .messageId(messageId)
-                .text(newText);
+                .text(newText)
+                .parseMode(DEFAULT_PARSE_MODE);
 
         if (keyboard != null) {
             builder.replyMarkup(keyboard);
@@ -65,12 +68,16 @@ public class TelegramSender {
     }
 
     public void answerCallbackQuery(BotContext context, String callbackQueryId, String text) {
+        answerCallbackQuery(context, callbackQueryId, text, false);
+    }
+
+    public void answerCallbackQuery(BotContext context, String callbackQueryId, String text, boolean showAlert) {
         TelegramClient telegramClient = new OkHttpTelegramClient(context.bot().getToken());
         AnswerCallbackQuery.AnswerCallbackQueryBuilder<?, ?> builder = AnswerCallbackQuery.builder()
                 .callbackQueryId(callbackQueryId);
 
         if (text != null && !text.isBlank()) {
-            builder.text(text).showAlert(false);
+            builder.text(text).showAlert(showAlert);
         }
 
         try {

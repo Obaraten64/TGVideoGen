@@ -17,19 +17,25 @@ public class UserSessionService {
 
     @Transactional
     public BotUserSession getOrCreate(BotContext context) {
-        return sessionRepository.findByBotIdAndTelegramUserId(context.bot().getId(), context.telegramUserId())
+        return sessionRepository.findForUpdateByBotIdAndTelegramUserId(context.bot().getId(), context.telegramUserId())
                 .map(session -> {
                     session.setChatId(context.chatId());
                     session.setUpdatedAt(Instant.now());
                     return sessionRepository.save(session);
                 })
                 .orElseGet(() -> {
-                    BotUserSession newSession = new BotUserSession(
-                            context.bot().getId(),
-                            context.telegramUserId(),
-                            context.chatId()
-                    );
-                    return sessionRepository.save(newSession);
+                    try {
+                        BotUserSession newSession = new BotUserSession(
+                                context.bot().getId(),
+                                context.telegramUserId(),
+                                context.chatId()
+                        );
+                        return sessionRepository.save(newSession);
+                    } catch (Exception e) {
+                        // In case of concurrent creation race, fallback to locked read
+                        return sessionRepository.findForUpdateByBotIdAndTelegramUserId(context.bot().getId(), context.telegramUserId())
+                                .orElseThrow(() -> new IllegalStateException("Failed to get or create session", e));
+                    }
                 });
     }
 
