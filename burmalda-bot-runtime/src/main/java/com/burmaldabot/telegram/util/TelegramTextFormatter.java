@@ -1,47 +1,62 @@
 package com.burmaldabot.telegram.util;
 
-/**
- * A utility class for formatting text in Telegram messages.
- */
+import org.commonmark.node.Node;
+import org.commonmark.node.Paragraph;
+import org.commonmark.parser.Parser;
+import org.commonmark.renderer.html.HtmlRenderer;
+import org.commonmark.renderer.html.HtmlNodeRendererContext;
+import org.commonmark.renderer.html.HtmlWriter;
+import org.springframework.stereotype.Component;
+
+import java.util.Collections;
+import java.util.Set;
+
+@Component
 public final class TelegramTextFormatter {
 
-    private TelegramTextFormatter() {
-    }
+    private final Parser parser = Parser.builder().build();
 
-    public static String escape(String text) {
-        if (text == null) {
+    private final HtmlRenderer renderer = HtmlRenderer.builder()
+            .escapeHtml(true)
+            .nodeRendererFactory(TelegramParagraphRenderer::new)
+            .build();
+
+    public String toTelegramHtml(String markdown) {
+        if (markdown == null || markdown.isBlank()) {
             return "";
         }
 
-        return text
-                .replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;");
+        return renderer.render(parser.parse(markdown)).strip();
     }
 
-    public static String bold(String text) {
-        return "<b>" + escape(text) + "</b>";
-    }
+    private static final class TelegramParagraphRenderer
+            implements org.commonmark.renderer.NodeRenderer {
 
-    public static String italic(String text) {
-        return "<i>" + escape(text) + "</i>";
-    }
+        private final HtmlNodeRendererContext context;
+        private final HtmlWriter html;
 
-    public static String underline(String text) {
-        return "<u>" + escape(text) + "</u>";
-    }
+        private TelegramParagraphRenderer(HtmlNodeRendererContext context) {
+            this.context = context;
+            this.html = context.getWriter();
+        }
 
-    public static String strikethrough(String text) {
-        return "<s>" + escape(text) + "</s>";
-    }
+        @Override
+        public Set<Class<? extends Node>> getNodeTypes() {
+            return Collections.singleton(Paragraph.class);
+        }
 
-    public static String code(String text) {
-        return "<code>" + escape(text) + "</code>";
-    }
+        @Override
+        public void render(Node node) {
+            if (node.getPrevious() != null) {
+                html.line();
+                html.line();
+            }
 
-    public static String link(String text, String url) {
-        return "<a href=\"" + escape(url) + "\">"
-                + escape(text)
-                + "</a>";
+            Node child = node.getFirstChild();
+            while (child != null) {
+                context.render(child);
+                child = child.getNext();
+            }
+        }
     }
 }

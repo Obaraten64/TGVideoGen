@@ -5,7 +5,6 @@ import com.burmaldabot.flow.session.UserSessionService;
 import com.burmaldabot.model.bot.BotContext;
 import com.burmaldabot.telegram.TelegramSender;
 import com.burmaldabot.telegram.keyboard.TelegramKeyboardFactory;
-import com.burmaldabot.telegram.util.TelegramTextFormatter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -41,17 +40,14 @@ public class UserFlowDispatcher {
                         "Главное меню:",
                         keyboardFactory.createRemoveReplyKeyboard()
                 );
-                String response = """
-                        👋 %s
-                        
-                        Создавайте захватывающие видеоролики из ваших фото с помощью нейросетей Wan 3.0.
-                        Выберите действие:
-                        """.formatted(
-                        TelegramTextFormatter.bold("Добро пожаловать в Burmalda AI Video!")
-                );
                 telegramSender.sendMessage(
                         context,
-                        response,
+                        """
+                                👋 **Добро пожаловать в Burmalda AI Video!**
+                                
+                                Создавайте захватывающие видеоролики из ваших фото с помощью нейросетей Wan 3.0.
+                                Выберите действие:
+                                """,
                         keyboardFactory.createMainMenu()
                 );
                 return;

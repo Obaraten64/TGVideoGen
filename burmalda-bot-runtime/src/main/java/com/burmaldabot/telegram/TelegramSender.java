@@ -1,6 +1,7 @@
 package com.burmaldabot.telegram;
 
 import com.burmaldabot.model.bot.BotContext;
+import com.burmaldabot.telegram.util.TelegramTextFormatter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -23,6 +24,7 @@ import java.io.ByteArrayInputStream;
 @RequiredArgsConstructor
 @Slf4j
 public class TelegramSender {
+    private final TelegramTextFormatter telegramTextFormatter;
     private static final String DEFAULT_PARSE_MODE = "HTML";
 
     public Message sendMessage(String messageText, BotContext context) {
@@ -31,9 +33,11 @@ public class TelegramSender {
 
     public Message sendMessage(BotContext context, String messageText, ReplyKeyboard replyKeyboard) {
         TelegramClient telegramClient = new OkHttpTelegramClient(context.bot().getToken());
+        String formattedText = telegramTextFormatter.toTelegramHtml(messageText);
+
         SendMessage.SendMessageBuilder<?, ?> builder = SendMessage.builder()
                 .chatId(context.chatId())
-                .text(messageText)
+                .text(formattedText)
                 .parseMode(DEFAULT_PARSE_MODE);
 
         if (replyKeyboard != null) {
@@ -50,10 +54,12 @@ public class TelegramSender {
 
     public void editMessageText(BotContext context, Integer messageId, String newText, InlineKeyboardMarkup keyboard) {
         TelegramClient telegramClient = new OkHttpTelegramClient(context.bot().getToken());
+        String formattedText = telegramTextFormatter.toTelegramHtml(newText);
+
         EditMessageText.EditMessageTextBuilder<?, ?> builder = EditMessageText.builder()
                 .chatId(context.chatId())
                 .messageId(messageId)
-                .text(newText)
+                .text(formattedText)
                 .parseMode(DEFAULT_PARSE_MODE);
 
         if (keyboard != null) {
@@ -108,7 +114,8 @@ public class TelegramSender {
                 .video(new InputFile(new ByteArrayInputStream(videoBytes), fileName));
 
         if (caption != null && !caption.isBlank()) {
-            builder.caption(caption);
+            builder.caption(telegramTextFormatter.toTelegramHtml(caption))
+                    .parseMode(DEFAULT_PARSE_MODE);
         }
 
         try {
