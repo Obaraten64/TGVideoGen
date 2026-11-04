@@ -1,0 +1,115 @@
+{
+  "keyboards": {
+    "MAIN_MENU": {
+      "type": "INLINE",
+      "rows": [
+        [
+          { "text": "🎬 Сгенерировать видео", "callbackData": "menu:generate" }
+        ],
+        [
+          { "text": "🎁 Бесплатная генерация (1 раз)", "callbackData": "menu:free_trial" }
+        ],
+        [
+          { "text": "👤 Профиль", "callbackData": "menu:profile" },
+          { "text": "🎭 Персонажи", "callbackData": "menu:characters" }
+        ]
+      ]
+    },
+
+    "PROFILE": {
+      "type": "INLINE",
+      "rows": [
+        [
+          { "text": "💳 Пополнить баланс", "callbackData": "profile:topup" }
+        ],
+        [
+          { "text": "🎞 Мои генерации", "callbackData": "profile:my_generations" }
+        ],
+        [
+          { "text": "⬅️ Главное меню", "callbackData": "menu:main" }
+        ]
+      ]
+    },
+
+    "SELECTING_RESOLUTION": {
+      "type": "INLINE",
+      "rows": [
+        [
+          { "text": "🔹 480p — 14 токенов/с", "callbackData": "gen:res:480p" }
+        ],
+        [
+          { "text": "🔷 720p — 28 токенов/с", "callbackData": "gen:res:720p" }
+        ],
+        [
+          { "text": "🔶 1080p — 56 токенов/с", "callbackData": "gen:res:1080p" }
+        ],
+        [
+          { "text": "❌ Отмена", "callbackData": "gen:cancel" }
+        ]
+      ]
+    },
+
+    "INPUTTING_DURATION": {
+      "type": "INLINE",
+      "rows": [
+        [
+          { "text": "3 сек", "callbackData": "gen:dur:3" },
+          { "text": "5 сек", "callbackData": "gen:dur:5" },
+          { "text": "10 сек", "callbackData": "gen:dur:10" },
+          { "text": "15 сек", "callbackData": "gen:dur:15" }
+        ],
+        [
+          { "text": "❌ Отмена", "callbackData": "gen:cancel" }
+        ]
+      ]
+    },
+
+    "COLLECTING_PHOTOS": {
+      "type": "REPLY",
+      "resizeKeyboard": true,
+      "oneTimeKeyboard": false,
+      "rows": [
+        [
+          {
+            "text": "✅ Подтвердить ({count} фото)",
+            "condition": "count > 0"
+          }
+        ],
+        [
+          { "text": "❌ Отмена" }
+        ]
+      ]
+    },
+
+    "INPUTTING_PROMPT": {
+      "type": "INLINE",
+      "rows": [
+        [
+          { "text": "🌆 Киберпанк", "callbackData": "tpl:cyberpunk" },
+          { "text": "🎬 Кинематограф", "callbackData": "tpl:cinematic" }
+        ],
+        [
+          { "text": "🎌 Аниме", "callbackData": "tpl:anime" },
+          { "text": "✨ Сюрреализм", "callbackData": "tpl:surreal" }
+        ],
+        [
+          { "text": "❌ Отмена", "callbackData": "gen:cancel" }
+        ]
+      ]
+    },
+
+    "GENERATION_STATUS": {
+      "type": "INLINE",
+      "rows": [
+        [
+          { "text": "🎞 Мои генерации", "callbackData": "profile:my_generations" },
+          { "text": "➕ Новая генерация", "callbackData": "menu:generate" }
+        ]
+      ]
+    },
+
+    "REMOVE_KEYBOARD": {
+      "type": "REMOVE"
+    }
+  }
+}
