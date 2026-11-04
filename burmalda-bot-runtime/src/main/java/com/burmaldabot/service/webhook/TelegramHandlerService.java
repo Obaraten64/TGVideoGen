@@ -1,39 +1,40 @@
 package com.burmaldabot.service.webhook;
 
-import com.burmaldabot.input.TelegramInputDispatcher;
+import com.burmaldabot.flow.UserFlowDispatcher;
 import com.burmaldabot.model.bot.Bot;
 import com.burmaldabot.model.bot.BotContext;
-import com.burmaldabot.telegram.TelegramSender;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 
-import java.util.Optional;
-
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class TelegramHandlerService {
-    private final TelegramInputDispatcher telegramInputDispatcher;
-    private final TelegramSender telegramSender;
+
+    private final UserFlowDispatcher userFlowDispatcher;
 
     public void consume(Update update, Bot bot) {
-        Message message = update.getMessage();
-        if (message == null || !update.hasMessage()) {
+        if (update.hasCallbackQuery()) {
+            CallbackQuery callback = update.getCallbackQuery();
+            Long chatId = callback.getMessage().getChatId();
+            Long userId = callback.getFrom().getId();
+
+            BotContext context = new BotContext(bot, chatId, userId);
+            userFlowDispatcher.dispatchCallback(context, callback);
             return;
         }
 
-        BotContext context = new BotContext(
-                bot,
-                message.getChatId(),
-                message.getFrom().getId()
-        );
-        Optional<String> optionalResponse = telegramInputDispatcher.dispatch(message, context);
-        if (optionalResponse.isEmpty() || optionalResponse.get().isEmpty()) {
-            return;
-        }
+        if (update.hasMessage()) {
+            Message message = update.getMessage();
+            Long chatId = message.getChatId();
+            Long userId = message.getFrom() != null ? message.getFrom().getId() : chatId;
 
-        String responseMessage = optionalResponse.get();
-        telegramSender.sendMessage(responseMessage, context);
+            BotContext context = new BotContext(bot, chatId, userId);
+            userFlowDispatcher.dispatchMessage(context, message);
+        }
     }
 }
