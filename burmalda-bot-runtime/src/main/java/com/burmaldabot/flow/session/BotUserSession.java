@@ -76,7 +76,7 @@ public class BotUserSession {
 
     public void startFreeTrial() {
         this.state = UserFlowState.COLLECTING_PHOTOS;
-        this.selectedResolution = "480p";
+        this.selectedResolution = "480P";
         this.selectedDuration = 3;
         this.isFreeTrial = true;
         this.photoFileIds.clear();

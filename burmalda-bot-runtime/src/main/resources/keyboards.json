@@ -35,13 +35,13 @@
       "type": "INLINE",
       "rows": [
         [
-          { "text": "🔹 480p — 14 токенов/с", "callbackData": "gen:res:480p" }
+          { "text": "🔹 480p — 14 токенов/с", "callbackData": "gen:res:480P" }
         ],
         [
-          { "text": "🔷 720p — 28 токенов/с", "callbackData": "gen:res:720p" }
+          { "text": "🔷 720p — 28 токенов/с", "callbackData": "gen:res:720P" }
         ],
         [
-          { "text": "🔶 1080p — 56 токенов/с", "callbackData": "gen:res:1080p" }
+          { "text": "🔶 1080p — 56 токенов/с", "callbackData": "gen:res:1080P" }
         ],
         [
           { "text": "❌ Отмена", "callbackData": "gen:cancel" }
