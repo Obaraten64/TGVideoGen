@@ -31,6 +31,52 @@
       ]
     },
 
+    "TOP_UP_PACKAGES": {
+      "type": "INLINE",
+      "rows": [
+        [
+          { "text": "{btn1_text}", "callbackData": "{btn1_data}", "condition": "btn1_text" }
+        ],
+        [
+          { "text": "{btn2_text}", "callbackData": "{btn2_data}", "condition": "btn2_text" }
+        ],
+        [
+          { "text": "{btn3_text}", "callbackData": "{btn3_data}", "condition": "btn3_text" }
+        ],
+        [
+          { "text": "⬅️ Назад в профиль", "callbackData": "menu:profile" }
+        ]
+      ]
+    },
+
+    "TOP_UP_CONFIRMATION": {
+      "type": "INLINE",
+      "rows": [
+        [
+          { "text": "✅ Подтвердить и оплатить ({price} {asset})", "callbackData": "topup:confirm" }
+        ],
+        [
+          { "text": "✏️ Изменить количество", "callbackData": "profile:topup" },
+          { "text": "❌ Отмена", "callbackData": "menu:profile" }
+        ]
+      ]
+    },
+
+    "TOP_UP_INVOICE": {
+      "type": "INLINE",
+      "rows": [
+        [
+          { "text": "💳 Оплатить {price} {asset} в @CryptoBot", "url": "{pay_url}" }
+        ],
+        [
+          { "text": "🔄 Проверить статус оплаты", "callbackData": "topup:check:{order_uuid}" }
+        ],
+        [
+          { "text": "⬅️ В профиль", "callbackData": "menu:profile" }
+        ]
+      ]
+    },
+
     "SELECTING_RESOLUTION": {
       "type": "INLINE",
       "rows": [
