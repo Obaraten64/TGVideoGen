@@ -37,6 +37,8 @@ public class BotUserSession {
     private Integer selectedDuration;
     private Boolean isFreeTrial = false;
 
+    private Long pendingTopupTokens;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "bot_user_session_photos", joinColumns = @JoinColumn(name = "session_id"))
     @Column(name = "file_id")
@@ -61,6 +63,7 @@ public class BotUserSession {
         this.selectedResolution = null;
         this.selectedDuration = null;
         this.isFreeTrial = false;
+        this.pendingTopupTokens = null;
         this.photoFileIds.clear();
         this.updatedAt = Instant.now();
     }
@@ -76,7 +79,7 @@ public class BotUserSession {
 
     public void startFreeTrial() {
         this.state = UserFlowState.COLLECTING_PHOTOS;
-        this.selectedResolution = "480p";
+        this.selectedResolution = "480P";
         this.selectedDuration = 3;
         this.isFreeTrial = true;
         this.photoFileIds.clear();

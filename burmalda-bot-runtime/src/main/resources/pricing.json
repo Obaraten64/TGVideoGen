@@ -1,0 +1,21 @@
+{
+  "asset": "USDT",
+  "basePricePerToken": 0.01,
+  "minTokens": 10,
+  "maxTokens": 50000,
+  "invoiceExpiresInSeconds": 1800,
+  "fastButtons": [
+    {
+      "tokens": 100,
+      "discountPercent": 0
+    },
+    {
+      "tokens": 500,
+      "discountPercent": 10
+    },
+    {
+      "tokens": 1500,
+      "discountPercent": 20
+    }
+  ]
+}

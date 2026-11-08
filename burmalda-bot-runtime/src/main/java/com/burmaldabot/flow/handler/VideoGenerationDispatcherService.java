@@ -1,6 +1,5 @@
 package com.burmaldabot.flow.handler;
 
-import com.burmaldabot.config.AiRequestConfig;
 import com.burmaldabot.flow.FlowResponseService;
 import com.burmaldabot.flow.economy.UserBalanceService;
 import com.burmaldabot.flow.economy.VideoPricing;
@@ -15,6 +14,7 @@ import com.burmaldabot.telegram.TelegramSender;
 import com.burmaldabot.telegram.keyboard.TelegramKeyboardFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -27,13 +27,14 @@ import java.util.List;
 public class VideoGenerationDispatcherService {
 
     private static final String INPUT_FOLDER = "input";
+    @Value("${ai.request.prompt}")
+    private final String prompt;
 
     private final TelegramFileService fileService;
     private final KieFileService kieFileService;
     private final KieVideoService kieVideoService;
     private final StorageFileService storageFileService;
     private final AiTaskService aiTaskService;
-    private final AiRequestConfig aiRequestConfig;
     private final UserBalanceService balanceService;
     private final UserSessionService sessionService;
     private final TelegramKeyboardFactory keyboardFactory;
@@ -95,7 +96,7 @@ public class VideoGenerationDispatcherService {
 
             // Create task in Kie
             AiTaskContext aiTaskContext = new AiTaskContext(
-                    prompt != null && !prompt.isBlank() ? prompt : aiRequestConfig.getPrompt(),
+                    prompt != null && !prompt.isBlank() ? prompt : this.prompt,
                     uploadedUrls,
                     resolution,
                     duration
