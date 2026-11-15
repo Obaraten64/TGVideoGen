@@ -36,7 +36,9 @@ public class CancelFlowCallbackHandler implements CallbackQueryHandler {
                 UserFlowState.SELECTING_RESOLUTION,
                 UserFlowState.INPUTTING_DURATION,
                 UserFlowState.COLLECTING_PHOTOS,
-                UserFlowState.INPUTTING_PROMPT
+                UserFlowState.INPUTTING_PROMPT,
+                UserFlowState.AWAITING_TOPUP_AMOUNT,
+                UserFlowState.CONFIRMING_TOPUP
         );
     }
 

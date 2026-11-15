@@ -20,6 +20,7 @@ import java.util.Set;
 public class ProfileMenuCallbackHandler implements CallbackQueryHandler {
 
     private final UserBalanceService balanceService;
+    private final com.burmaldabot.flow.session.UserSessionService sessionService;
     private final TelegramKeyboardFactory keyboardFactory;
     private final TelegramSender telegramSender;
 
@@ -30,11 +31,16 @@ public class ProfileMenuCallbackHandler implements CallbackQueryHandler {
 
     @Override
     public Set<UserFlowState> getAllowedStates() {
-        return Set.of(UserFlowState.MAIN_MENU);
+        return Set.of(UserFlowState.MAIN_MENU, UserFlowState.AWAITING_TOPUP_AMOUNT, UserFlowState.CONFIRMING_TOPUP);
     }
 
     @Override
     public void handleCallback(BotContext context, BotUserSession session, CallbackQuery callbackQuery) {
+        if (session.getState() != UserFlowState.MAIN_MENU) {
+            session.resetToMenu();
+            sessionService.save(session);
+        }
+
         long balance = balanceService.getBalance(context.telegramUserId(), context.bot().getId());
         boolean freeTrialAvailable = !balanceService.hasUsedFreeTrial(context.telegramUserId(), context.bot().getId());
 

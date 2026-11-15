@@ -90,6 +90,9 @@ public class KeyboardTemplateEngine {
         if (val instanceof Number n) {
             return n.intValue() != 0;
         }
+        if (val instanceof String s) {
+            return !s.isBlank() && !"false".equalsIgnoreCase(s.trim());
+        }
         return Boolean.parseBoolean(String.valueOf(val));
     }
 }
