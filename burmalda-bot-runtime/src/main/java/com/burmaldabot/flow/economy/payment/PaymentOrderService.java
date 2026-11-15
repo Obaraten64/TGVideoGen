@@ -5,10 +5,12 @@ import com.burmaldabot.flow.economy.payment.dto.CreateInvoiceRequest;
 import com.burmaldabot.flow.economy.payment.dto.CryptoInvoiceDto;
 import com.burmaldabot.flow.economy.pricing.PricingConfig;
 import com.burmaldabot.flow.economy.pricing.TokenPricingService;
+import com.burmaldabot.flow.session.UserSessionService;
 import com.burmaldabot.model.bot.Bot;
 import com.burmaldabot.model.bot.BotContext;
 import com.burmaldabot.repository.BotRepository;
 import com.burmaldabot.telegram.TelegramSender;
+import com.burmaldabot.telegram.keyboard.TelegramKeyboardFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,6 +33,8 @@ public class PaymentOrderService {
     private final UserBalanceService balanceService;
     private final BotRepository botRepository;
     private final TelegramSender telegramSender;
+    private final TelegramKeyboardFactory keyboardFactory;
+    private final UserSessionService sessionService;
 
     @Transactional
     public PaymentOrder createInvoiceOrder(BotContext context, long tokens) {
@@ -173,7 +177,8 @@ public class PaymentOrderService {
                     newBalance
             );
 
-            telegramSender.sendMessage(botContext, successMessage, null);
+            telegramSender.sendMessage(botContext, successMessage, keyboardFactory.createMainMenu());
+            sessionService.getOrCreate(botContext).resetToMenu();
         } catch (Exception e) {
             log.error("Failed to send Telegram success notification for order {}", order.getOrderUuid(), e);
         }

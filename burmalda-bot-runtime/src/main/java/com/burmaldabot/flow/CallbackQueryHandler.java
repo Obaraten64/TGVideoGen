@@ -17,4 +17,12 @@ public interface CallbackQueryHandler {
     Set<UserFlowState> getAllowedStates();
 
     void handleCallback(BotContext context, BotUserSession session, CallbackQuery callbackQuery);
+
+    /**
+     * Whether this handler manages answering the callback query itself (e.g. showing custom alerts).
+     * If false, the dispatcher automatically acknowledges the callback query to clear the loading indicator.
+     */
+    default boolean answersCallbackQuery() {
+        return false;
+    }
 }
