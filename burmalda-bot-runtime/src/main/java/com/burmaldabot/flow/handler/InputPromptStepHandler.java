@@ -6,6 +6,7 @@ import com.burmaldabot.flow.UserFlowStepHandler;
 import com.burmaldabot.flow.session.BotUserSession;
 import com.burmaldabot.flow.session.UserSessionService;
 import com.burmaldabot.model.bot.BotContext;
+import com.burmaldabot.service.MessageService;
 import com.burmaldabot.telegram.TelegramSender;
 import com.burmaldabot.telegram.keyboard.TelegramKeyboardFactory;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ public class InputPromptStepHandler implements UserFlowStepHandler {
     private final TelegramKeyboardFactory keyboardFactory;
     private final TelegramSender telegramSender;
     private final FlowResponseService responseService;
+    private final MessageService messageService;
 
     @Override
     public UserFlowState getSupportedState() {
@@ -34,7 +36,7 @@ public class InputPromptStepHandler implements UserFlowStepHandler {
         if (!message.hasText()) {
             responseService.sendValidationError(
                     context,
-                    "Пожалуйста, введите текстовый промпт сообщением или выберите шаблон стиля кнопкой ниже:",
+                    messageService.getMessage("flow.generate.prompt.invalid"),
                     keyboardFactory.createPromptTemplatesKeyboard()
             );
             return;
@@ -46,7 +48,7 @@ public class InputPromptStepHandler implements UserFlowStepHandler {
             sessionService.save(session);
             telegramSender.sendMessage(
                     context,
-                    "❌ Создание видео отменено.\n\nГлавное меню:",
+                    messageService.getMessage("flow.generate.prompt.cancelled"),
                     keyboardFactory.createMainMenu()
             );
             return;

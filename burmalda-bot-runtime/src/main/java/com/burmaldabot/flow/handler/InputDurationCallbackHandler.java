@@ -5,6 +5,7 @@ import com.burmaldabot.flow.FlowResponseService;
 import com.burmaldabot.flow.UserFlowState;
 import com.burmaldabot.flow.session.BotUserSession;
 import com.burmaldabot.model.bot.BotContext;
+import com.burmaldabot.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -19,6 +20,7 @@ public class InputDurationCallbackHandler implements CallbackQueryHandler {
 
     private final InputDurationStepHandler inputDurationStepHandler;
     private final FlowResponseService responseService;
+    private final MessageService messageService;
 
     @Override
     public boolean supports(String callbackData) {
@@ -39,7 +41,7 @@ public class InputDurationCallbackHandler implements CallbackQueryHandler {
             responseService.clearInlineMarkup(
                     context,
                     callbackQuery.getMessage().getMessageId(),
-                    String.format("✅ Выбрано: **%d сек**", seconds)
+                    messageService.getMessage("flow.generate.duration_selected", seconds)
             );
         }
 

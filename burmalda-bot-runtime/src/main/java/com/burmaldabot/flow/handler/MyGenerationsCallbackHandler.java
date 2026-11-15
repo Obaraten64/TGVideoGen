@@ -6,6 +6,7 @@ import com.burmaldabot.flow.session.BotUserSession;
 import com.burmaldabot.model.ai.AiTask;
 import com.burmaldabot.model.bot.BotContext;
 import com.burmaldabot.repository.AiTaskRepository;
+import com.burmaldabot.service.MessageService;
 import com.burmaldabot.telegram.TelegramSender;
 import com.burmaldabot.telegram.keyboard.TelegramKeyboardFactory;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ public class MyGenerationsCallbackHandler implements CallbackQueryHandler {
     private final AiTaskRepository aiTaskRepository;
     private final TelegramKeyboardFactory keyboardFactory;
     private final TelegramSender telegramSender;
+    private final MessageService messageService;
 
     @Override
     public boolean supports(String callbackData) {
@@ -45,22 +47,23 @@ public class MyGenerationsCallbackHandler implements CallbackQueryHandler {
         if (recentTasks.isEmpty()) {
             telegramSender.sendMessage(
                     context,
-                    "🎞 **Мои генерации**\n\nУ вас пока нет созданных задач на генерацию видео.",
+                    messageService.getMessage("generations.empty"),
                     keyboardFactory.createMainMenu()
             );
             return;
         }
 
-        StringBuilder sb = new StringBuilder("🎞 **Ваши последние генерации:**\n\n");
+        StringBuilder sb = new StringBuilder(messageService.getMessage("generations.header"));
         for (int i = 0; i < recentTasks.size(); i++) {
             AiTask task = recentTasks.get(i);
             String statusEmoji = switch (task.getStatus()) {
-                case SUCCESS -> "✅ Готово";
-                case PROCESSING -> "⏳ В обработке";
-                case FAILED -> "❌ Ошибка";
-                default -> "🕒 Создана";
+                case SUCCESS -> messageService.getMessage("generations.status.success");
+                case PROCESSING -> messageService.getMessage("generations.status.processing");
+                case FAILED -> messageService.getMessage("generations.status.failed");
+                default -> messageService.getMessage("generations.status.created");
             };
-            sb.append(String.format("%d. Задача `#%s` — %s\n",
+            sb.append(messageService.getMessage(
+                    "generations.item",
                     i + 1,
                     task.getAiTaskId().substring(0, Math.min(8, task.getAiTaskId().length())),
                     statusEmoji

@@ -6,6 +6,7 @@ import com.burmaldabot.flow.UserFlowState;
 import com.burmaldabot.flow.session.BotUserSession;
 import com.burmaldabot.flow.session.UserSessionService;
 import com.burmaldabot.model.bot.BotContext;
+import com.burmaldabot.service.MessageService;
 import com.burmaldabot.telegram.TelegramSender;
 import com.burmaldabot.telegram.keyboard.TelegramKeyboardFactory;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ public class CancelFlowCallbackHandler implements CallbackQueryHandler {
     private final TelegramKeyboardFactory keyboardFactory;
     private final TelegramSender telegramSender;
     private final FlowResponseService responseService;
+    private final MessageService messageService;
 
     @Override
     public boolean supports(String callbackData) {
@@ -49,19 +51,19 @@ public class CancelFlowCallbackHandler implements CallbackQueryHandler {
 
         // Clear inline markup from previous message if available
         if (callbackQuery.getMessage() != null) {
-            responseService.clearInlineMarkup(context, callbackQuery.getMessage().getMessageId(), "❌ Отменено");
+            responseService.clearInlineMarkup(context, callbackQuery.getMessage().getMessageId(), messageService.getMessage("alert.cancelled"));
         }
 
         // Also remove any reply keyboard if was in photo collection
         telegramSender.sendMessage(
                 context,
-                "Главное меню:",
+                messageService.getMessage("menu.main.header"),
                 keyboardFactory.createRemoveReplyKeyboard()
         );
 
         telegramSender.sendMessage(
                 context,
-                "👋 **Главное меню Burmalda AI Video**\n\nВыберите действие:",
+                messageService.getMessage("menu.main.cancelled"),
                 keyboardFactory.createMainMenu()
         );
     }

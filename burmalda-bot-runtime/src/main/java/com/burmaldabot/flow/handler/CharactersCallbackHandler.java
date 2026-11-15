@@ -4,6 +4,7 @@ import com.burmaldabot.flow.CallbackQueryHandler;
 import com.burmaldabot.flow.UserFlowState;
 import com.burmaldabot.flow.session.BotUserSession;
 import com.burmaldabot.model.bot.BotContext;
+import com.burmaldabot.service.MessageService;
 import com.burmaldabot.telegram.TelegramSender;
 import com.burmaldabot.telegram.keyboard.TelegramKeyboardFactory;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ public class CharactersCallbackHandler implements CallbackQueryHandler {
 
     private final TelegramKeyboardFactory keyboardFactory;
     private final TelegramSender telegramSender;
+    private final MessageService messageService;
 
     @Override
     public boolean supports(String callbackData) {
@@ -35,11 +37,7 @@ public class CharactersCallbackHandler implements CallbackQueryHandler {
     public void handleCallback(BotContext context, BotUserSession session, CallbackQuery callbackQuery) {
         telegramSender.sendMessage(
                 context,
-                """
-                        🎭 **Персонажи**
-                        
-                        Каталог готовых персонажей и стилей в разработке.
-                        Скоро здесь появятся шаблоны для быстрого старта!""",
+                messageService.getMessage("characters.catalog.placeholder"),
                 keyboardFactory.createMainMenu()
         );
     }

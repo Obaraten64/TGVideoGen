@@ -7,6 +7,7 @@ import com.burmaldabot.flow.economy.pricing.TokenPricingService;
 import com.burmaldabot.flow.session.BotUserSession;
 import com.burmaldabot.flow.session.UserSessionService;
 import com.burmaldabot.model.bot.BotContext;
+import com.burmaldabot.service.MessageService;
 import com.burmaldabot.telegram.TelegramSender;
 import com.burmaldabot.telegram.keyboard.TelegramKeyboardFactory;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class TopUpCallbackHandler implements CallbackQueryHandler {
     private final UserSessionService sessionService;
     private final TelegramKeyboardFactory keyboardFactory;
     private final TelegramSender telegramSender;
+    private final MessageService messageService;
 
     @Override
     public boolean supports(String callbackData) {
@@ -43,10 +45,8 @@ public class TopUpCallbackHandler implements CallbackQueryHandler {
         session.setState(UserFlowState.AWAITING_TOPUP_AMOUNT);
         sessionService.save(session);
 
-        String messageText = String.format(
-                "💳 **Пополнение баланса токенов**\n\n" +
-                        "Текущий курс: **%s %s за 1 токен**\n\n" +
-                        "Выберите один из готовых пакетов кнопкой ниже, или **введите любое количество токенов сообщением в чат** (от %d до %d):",
+        String messageText = messageService.getMessage(
+                "topup.menu.prompt",
                 config.getBasePricePerToken().toPlainString(),
                 config.getAsset(),
                 config.getMinTokens(),

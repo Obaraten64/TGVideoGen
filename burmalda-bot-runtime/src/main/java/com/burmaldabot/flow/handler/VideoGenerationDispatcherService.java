@@ -40,6 +40,7 @@ public class VideoGenerationDispatcherService {
     private final TelegramKeyboardFactory keyboardFactory;
     private final TelegramSender telegramSender;
     private final FlowResponseService responseService;
+    private final MessageService messageService;
 
     public void startGeneration(BotContext context, BotUserSession session, String prompt) {
         String resolution = session.getSelectedResolution() != null ? session.getSelectedResolution() : "480p";
@@ -54,7 +55,7 @@ public class VideoGenerationDispatcherService {
             if (!reserved) {
                 responseService.sendValidationError(
                         context,
-                        "Бесплатная генерация уже использована. Пожалуйста, пополните баланс.",
+                        messageService.getMessage("flow.dispatch.trial_used"),
                         keyboardFactory.createProfileKeyboard(false)
                 );
                 session.resetToMenu();
@@ -66,7 +67,7 @@ public class VideoGenerationDispatcherService {
             if (!deducted) {
                 responseService.sendValidationError(
                         context,
-                        "Недостаточно токенов на балансе для запуска генерации.",
+                        messageService.getMessage("flow.dispatch.insufficient_balance"),
                         keyboardFactory.createProfileKeyboard(false)
                 );
                 session.resetToMenu();
@@ -78,7 +79,7 @@ public class VideoGenerationDispatcherService {
         // Keyboard intentionally omitted: transient progress status message before final task submission confirmation
         telegramSender.sendMessage(
                 context,
-                "⏳ **Загружаем фото и подготавливаем генерацию...**",
+                messageService.getMessage("flow.dispatch.uploading"),
                 null
         );
 
@@ -110,23 +111,7 @@ public class VideoGenerationDispatcherService {
 
             telegramSender.sendMessage(
                     context,
-                    String.format(
-                            """
-                                    🚀 **Генерация запущена!**
-                                    
-                                    Параметры задачи:
-                                    • Разрешение: **%s**
-                                    • Длительность: **%d сек**
-                                    • Фото: **%d шт**
-                                    • Списано: **%d токенов**
-                                    
-                                    ⏳ Обычно создание видео занимает 1-3 минуты.
-                                    Мы пришлем готовый результат прямо в этот диалог!""",
-                            resolution,
-                            duration,
-                            uploadedUrls.size(),
-                            totalCost
-                    ),
+                    messageService.getMessage("flow.dispatch.started", resolution, duration, uploadedUrls.size(), totalCost),
                     keyboardFactory.createGenerationStatusKeyboard()
             );
 
@@ -141,8 +126,7 @@ public class VideoGenerationDispatcherService {
             // Keep user in current prompt step so their uploaded photos are not lost!
             responseService.sendValidationError(
                     context,
-                    "Произошла ошибка при отправке задачи в нейросеть. Ваши фото сохранены, а токены возвращены на баланс.\n" +
-                            "Попробуйте ввести другой промпт или выбрать стиль ниже:",
+                    messageService.getMessage("flow.dispatch.api_error_refund"),
                     keyboardFactory.createPromptTemplatesKeyboard()
             );
         }

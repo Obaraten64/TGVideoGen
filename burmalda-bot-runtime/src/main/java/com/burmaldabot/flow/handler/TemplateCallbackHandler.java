@@ -5,6 +5,7 @@ import com.burmaldabot.flow.FlowResponseService;
 import com.burmaldabot.flow.UserFlowState;
 import com.burmaldabot.flow.session.BotUserSession;
 import com.burmaldabot.model.bot.BotContext;
+import com.burmaldabot.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -20,6 +21,7 @@ public class TemplateCallbackHandler implements CallbackQueryHandler {
 
     private final VideoGenerationDispatcherService dispatcherService;
     private final FlowResponseService responseService;
+    private final MessageService messageService;
 
     private static final Map<String, String> TEMPLATE_PROMPTS = Map.of(
             "tpl:cyberpunk", "cyberpunk style, neon lights, futuristic city atmosphere, volumetric lighting, high quality 8k",
@@ -47,7 +49,7 @@ public class TemplateCallbackHandler implements CallbackQueryHandler {
             responseService.clearInlineMarkup(
                     context,
                     callbackQuery.getMessage().getMessageId(),
-                    "✅ Выбран шаблон стиля"
+                    messageService.getMessage("flow.generate.template_selected")
             );
         }
 

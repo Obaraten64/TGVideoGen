@@ -6,6 +6,7 @@ import com.burmaldabot.flow.economy.UserBalanceService;
 import com.burmaldabot.flow.session.BotUserSession;
 import com.burmaldabot.flow.session.UserSessionService;
 import com.burmaldabot.model.bot.BotContext;
+import com.burmaldabot.service.MessageService;
 import com.burmaldabot.telegram.TelegramSender;
 import com.burmaldabot.telegram.keyboard.TelegramKeyboardFactory;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ public class StartFreeTrialCallbackHandler implements CallbackQueryHandler {
     private final UserBalanceService balanceService;
     private final TelegramKeyboardFactory keyboardFactory;
     private final TelegramSender telegramSender;
+    private final MessageService messageService;
 
     @Override
     public boolean supports(String callbackData) {
@@ -41,10 +43,7 @@ public class StartFreeTrialCallbackHandler implements CallbackQueryHandler {
         if (used) {
             telegramSender.sendMessage(
                     context,
-                    """
-                            ⚠️ **Бесплатная генерация уже использована!**
-                            
-                            Вы можете пополнить баланс в профиле и создавать видео в любом разрешении.""",
+                    messageService.getMessage("flow.trial.already_used"),
                     keyboardFactory.createProfileKeyboard(false)
             );
             return;
@@ -55,13 +54,7 @@ public class StartFreeTrialCallbackHandler implements CallbackQueryHandler {
 
         telegramSender.sendMessage(
                 context,
-                """
-                        🎁 **Бесплатная пробная генерация активирована!**
-                        
-                        Параметры: **480p, 3 секунды** (0 токенов).
-                        
-                        📸 **Отправьте фото (до 10 шт)**. Отправляйте по одному или альбомом.
-                        После отправки нажмите кнопку «Подтвердить фото» под строкой ввода.""",
+                messageService.getMessage("flow.trial.activated"),
                 keyboardFactory.createPhotoCollectionReplyKeyboard(0)
         );
     }

@@ -8,6 +8,7 @@ import com.burmaldabot.flow.economy.VideoPricing;
 import com.burmaldabot.flow.session.BotUserSession;
 import com.burmaldabot.flow.session.UserSessionService;
 import com.burmaldabot.model.bot.BotContext;
+import com.burmaldabot.service.MessageService;
 import com.burmaldabot.telegram.TelegramSender;
 import com.burmaldabot.telegram.keyboard.TelegramKeyboardFactory;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class InputDurationStepHandler implements UserFlowStepHandler {
     private final TelegramKeyboardFactory keyboardFactory;
     private final TelegramSender telegramSender;
     private final FlowResponseService responseService;
+    private final MessageService messageService;
 
     @Override
     public UserFlowState getSupportedState() {
@@ -57,14 +59,8 @@ public class InputDurationStepHandler implements UserFlowStepHandler {
         if (currentBalance < totalCost && !Boolean.TRUE.equals(session.getIsFreeTrial())) {
             responseService.sendValidationError(
                     context,
-                    String.format(
-                            """
-                             **Недостаточно токенов!**
-                             
-                             Стоимость: **%d токенов** (%d сек × %d ток/с)
-                             Ваш баланс: **%d токенов**
-                             
-                             Пополните баланс в профиле или выберите меньшую длительность:""",
+                    messageService.getMessage(
+                            "flow.generate.insufficient_tokens",
                             totalCost,
                             seconds,
                             VideoPricing.getRatePerSecond(resolution),
@@ -81,16 +77,7 @@ public class InputDurationStepHandler implements UserFlowStepHandler {
 
         telegramSender.sendMessage(
                 context,
-                String.format(
-                        """
-                        ✅ Длительность: **%d сек** (стоимость: %d токенов).
-                        
-                        📸 **Шаг 3 из 3: Отправьте фото (до 10 шт)**
-                        Вы можете отправить до 10 фотографий (по одной или альбомом).
-                        Когда закончите, нажмите кнопку «Подтвердить фото» внизу:""",
-                        seconds,
-                        totalCost
-                ),
+                messageService.getMessage("flow.generate.step3.photos", seconds, totalCost),
                 keyboardFactory.createPhotoCollectionReplyKeyboard(0)
         );
     }
@@ -98,7 +85,7 @@ public class InputDurationStepHandler implements UserFlowStepHandler {
     private void sendValidationError(BotContext context) {
         telegramSender.sendMessage(
                 context,
-                "Пожалуйста, введите длительность видео числом от 1 до 30 секунд или выберите кнопку ниже:",
+                messageService.getMessage("flow.generate.duration_invalid"),
                 keyboardFactory.createDurationKeyboard()
         );
     }

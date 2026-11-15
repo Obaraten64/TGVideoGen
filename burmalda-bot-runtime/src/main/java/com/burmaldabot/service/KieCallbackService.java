@@ -33,8 +33,8 @@ public class KieCallbackService {
     private final StorageFileService storageFileService;
     private final AiTaskRepository aiTaskRepository;
     private final BotRepository botRepository;
-    private final UserBalanceService balanceService;
     private final TelegramKeyboardFactory keyboardFactory;
+    private final MessageService messageService;
 
     public void handle(KieCallback callback) {
         KieCallbackData data = callback.data();
@@ -61,12 +61,12 @@ public class KieCallbackService {
                         botContext,
                         video,
                         "generated-video.mp4",
-                        "🎬 **Ваше видео готово!**"
+                        messageService.getMessage("flow.kie.video_ready")
                 );
 
                 telegramSender.sendMessage(
                         botContext,
-                        "Что делаем дальше?",
+                        messageService.getMessage("flow.kie.next_steps"),
                         keyboardFactory.createGenerationStatusKeyboard()
                 );
 
@@ -90,7 +90,7 @@ public class KieCallbackService {
 
             telegramSender.sendMessage(
                     botContext,
-                    "❌ К сожалению, при генерации видео произошла ошибка на стороне нейросети. Попробуйте еще раз с другим фото или промптом.",
+                    messageService.getMessage("flow.kie.generation_failed"),
                     keyboardFactory.createMainMenu()
             );
         }

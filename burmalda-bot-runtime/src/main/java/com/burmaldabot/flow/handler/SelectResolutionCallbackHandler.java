@@ -6,6 +6,7 @@ import com.burmaldabot.flow.UserFlowState;
 import com.burmaldabot.flow.session.BotUserSession;
 import com.burmaldabot.flow.session.UserSessionService;
 import com.burmaldabot.model.bot.BotContext;
+import com.burmaldabot.service.MessageService;
 import com.burmaldabot.telegram.TelegramSender;
 import com.burmaldabot.telegram.keyboard.TelegramKeyboardFactory;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ public class SelectResolutionCallbackHandler implements CallbackQueryHandler {
     private final TelegramKeyboardFactory keyboardFactory;
     private final TelegramSender telegramSender;
     private final FlowResponseService responseService;
+    private final MessageService messageService;
 
     @Override
     public boolean supports(String callbackData) {
@@ -49,16 +51,13 @@ public class SelectResolutionCallbackHandler implements CallbackQueryHandler {
             responseService.clearInlineMarkup(
                     context,
                     callbackQuery.getMessage().getMessageId(),
-                    String.format("✅ Выбрано качество: **%s**", resolution)
+                    messageService.getMessage("flow.generate.resolution_selected", resolution)
             );
         }
 
         telegramSender.sendMessage(
                 context,
-                """
-                        ⏱ **Шаг 2 из 3: Укажите длительность видео**
-                        
-                        Введите количество секунд (от **1** до **30**) числом в чат или выберите быстрый вариант ниже:""",
+                messageService.getMessage("flow.generate.step2.duration"),
                 keyboardFactory.createDurationKeyboard()
         );
     }

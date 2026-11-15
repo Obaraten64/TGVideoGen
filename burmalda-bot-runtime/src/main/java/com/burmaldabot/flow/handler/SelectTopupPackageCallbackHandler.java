@@ -8,6 +8,7 @@ import com.burmaldabot.flow.economy.pricing.TokenPricingService;
 import com.burmaldabot.flow.session.BotUserSession;
 import com.burmaldabot.flow.session.UserSessionService;
 import com.burmaldabot.model.bot.BotContext;
+import com.burmaldabot.service.MessageService;
 import com.burmaldabot.telegram.TelegramSender;
 import com.burmaldabot.telegram.keyboard.TelegramKeyboardFactory;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class SelectTopupPackageCallbackHandler implements CallbackQueryHandler {
     private final TelegramKeyboardFactory keyboardFactory;
     private final TelegramSender telegramSender;
     private final FlowResponseService responseService;
+    private final MessageService messageService;
 
     @Override
     public boolean supports(String callbackData) {
@@ -61,16 +63,12 @@ public class SelectTopupPackageCallbackHandler implements CallbackQueryHandler {
             responseService.clearInlineMarkup(
                     context,
                     callbackQuery.getMessage().getMessageId(),
-                    String.format("Выбрано токенов: **%d токенов**", tokens)
+                    messageService.getMessage("topup.package_selected", tokens)
             );
         }
 
-        String confirmationText = String.format(
-                "🧾 **Подтверждение заказа**\n\n" +
-                        "• Выбрано токенов: **%d токенов**\n" +
-                        "• Курс: **%s %s** за токен\n" +
-                        "• Итого к оплате: **%s %s**\n\n" +
-                        "Нажмите кнопку ниже, чтобы перейти к оплате через официального бота **@CryptoBot**:",
+        String confirmationText = messageService.getMessage(
+                "topup.confirmation.card",
                 tokens,
                 config.getBasePricePerToken().toPlainString(),
                 config.getAsset(),

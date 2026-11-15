@@ -5,6 +5,7 @@ import com.burmaldabot.flow.UserFlowState;
 import com.burmaldabot.flow.session.BotUserSession;
 import com.burmaldabot.flow.session.UserSessionService;
 import com.burmaldabot.model.bot.BotContext;
+import com.burmaldabot.service.MessageService;
 import com.burmaldabot.telegram.TelegramSender;
 import com.burmaldabot.telegram.keyboard.TelegramKeyboardFactory;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class StartGenerateCallbackHandler implements CallbackQueryHandler {
     private final UserSessionService sessionService;
     private final TelegramKeyboardFactory keyboardFactory;
     private final TelegramSender telegramSender;
+    private final MessageService messageService;
 
     @Override
     public boolean supports(String callbackData) {
@@ -40,13 +42,7 @@ public class StartGenerateCallbackHandler implements CallbackQueryHandler {
 
         telegramSender.sendMessage(
                 context,
-                """
-                        🎬 **Шаг 1 из 3: Выберите качество видео**
-                        
-                        Чем выше качество, тем больше токенов потребуется на генерацию:
-                        • 480p — 14 токенов/сек
-                        • 720p — 28 токенов/сек
-                        • 1080p — 56 токенов/сек""",
+                messageService.getMessage("flow.generate.step1.resolution"),
                 keyboardFactory.createResolutionKeyboard()
         );
     }

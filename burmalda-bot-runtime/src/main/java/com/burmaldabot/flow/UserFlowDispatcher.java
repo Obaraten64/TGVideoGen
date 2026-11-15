@@ -3,6 +3,7 @@ package com.burmaldabot.flow;
 import com.burmaldabot.flow.session.BotUserSession;
 import com.burmaldabot.flow.session.UserSessionService;
 import com.burmaldabot.model.bot.BotContext;
+import com.burmaldabot.service.MessageService;
 import com.burmaldabot.telegram.TelegramSender;
 import com.burmaldabot.telegram.keyboard.TelegramKeyboardFactory;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class UserFlowDispatcher {
     private final TelegramKeyboardFactory keyboardFactory;
     private final TelegramSender telegramSender;
     private final FlowResponseService responseService;
+    private final MessageService messageService;
 
     public void dispatchMessage(BotContext context, Message message) {
         BotUserSession session = sessionService.getOrCreate(context);
@@ -37,17 +39,12 @@ public class UserFlowDispatcher {
                 sessionService.save(session);
                 telegramSender.sendMessage(
                         context,
-                        "Главное меню:",
+                        messageService.getMessage("menu.main.header"),
                         keyboardFactory.createRemoveReplyKeyboard()
                 );
                 telegramSender.sendMessage(
                         context,
-                        """
-                                👋 **Добро пожаловать в Burmalda AI Video!**
-                                
-                                Создавайте захватывающие видеоролики из ваших фото с помощью нейросетей Wan 3.0.
-                                Выберите действие:
-                                """,
+                        messageService.getMessage("menu.main.welcome"),
                         keyboardFactory.createMainMenu()
                 );
                 return;
@@ -68,7 +65,7 @@ public class UserFlowDispatcher {
             // Default response when in MAIN_MENU or unexpected state
             telegramSender.sendMessage(
                     context,
-                    "👋 **Добро пожаловать в Burmalda AI Video!**\n\nВыберите действие в меню ниже:",
+                    messageService.getMessage("menu.main.prompt"),
                     keyboardFactory.createMainMenu()
             );
         }
