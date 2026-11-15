@@ -30,7 +30,7 @@ public class BotUserSession {
     private Long chatId;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "state", nullable = false, length = 64, columnDefinition = "VARCHAR(64)")
     private UserFlowState state = UserFlowState.MAIN_MENU;
 
     private String selectedResolution;

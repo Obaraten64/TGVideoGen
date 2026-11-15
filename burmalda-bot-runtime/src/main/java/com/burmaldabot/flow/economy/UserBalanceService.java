@@ -11,8 +11,7 @@ import java.time.Instant;
 @RequiredArgsConstructor
 @Slf4j
 public class UserBalanceService {
-    //TODO: Implement payment system to allow users to purchase additional tokens
-    private static final long INITIAL_TOKENS = 150L;
+    private static final long INITIAL_TOKENS = 0L;
 
     private final UserBalanceRepository balanceRepository;
     private final UserFreeTrialRepository freeTrialRepository;

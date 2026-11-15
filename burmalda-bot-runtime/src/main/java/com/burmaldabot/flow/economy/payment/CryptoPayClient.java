@@ -2,9 +2,8 @@ package com.burmaldabot.flow.economy.payment;
 
 import com.burmaldabot.flow.economy.payment.dto.CreateInvoiceRequest;
 import com.burmaldabot.flow.economy.payment.dto.CryptoInvoiceDto;
+import com.burmaldabot.flow.economy.payment.dto.CryptoInvoicesResultDto;
 import com.burmaldabot.flow.economy.payment.dto.CryptoPayApiResponse;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -54,7 +53,7 @@ public class CryptoPayClient {
         String idsJoined = String.join(",", invoiceIds.stream().map(String::valueOf).toList());
         log.info("Calling Crypto Pay getInvoices for IDs: {}", idsJoined);
 
-        CryptoPayApiResponse<List<CryptoInvoiceDto>> response = restClient.get()
+        CryptoPayApiResponse<CryptoInvoicesResultDto> response = restClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/getInvoices")
                         .queryParam("invoice_ids", idsJoined)
@@ -69,6 +68,6 @@ public class CryptoPayClient {
             throw new IllegalStateException("Failed to get Crypto Pay invoices: " + errorMsg);
         }
 
-        return response.getResult();
+        return response.getResult().getItems() != null ? response.getResult().getItems() : List.of();
     }
 }

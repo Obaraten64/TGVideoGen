@@ -99,8 +99,10 @@ public class UserFlowDispatcher {
             return;
         }
 
-        // Stop button loading animation in Telegram client
-        telegramSender.answerCallbackQuery(context, callbackQuery.getId(), null);
+        // Stop button loading animation only if the handler does not answer the query itself
+        if (!handler.answersCallbackQuery()) {
+            telegramSender.answerCallbackQuery(context, callbackQuery.getId(), null);
+        }
         handler.handleCallback(context, session, callbackQuery);
     }
 }

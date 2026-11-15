@@ -1,5 +1,6 @@
 package com.burmaldabot.flow.economy.payment.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -36,12 +37,14 @@ public class CryptoInvoiceDto {
     private String feeAsset;
 
     @JsonProperty("fee_amount")
+    @JsonAlias({"fee", "fee_amount"})
     private String feeAmount;
 
     @JsonProperty("pay_url")
     private String payUrl;
 
     @JsonProperty("bot_invoice_url")
+    @JsonAlias({"bot_invoice_url", "mini_app_invoice_url", "web_app_invoice_url"})
     private String botInvoiceUrl;
 
     private String status;
