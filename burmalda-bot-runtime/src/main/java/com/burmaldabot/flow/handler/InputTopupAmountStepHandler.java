@@ -8,6 +8,7 @@ import com.burmaldabot.flow.economy.pricing.TokenPricingService;
 import com.burmaldabot.flow.session.BotUserSession;
 import com.burmaldabot.flow.session.UserSessionService;
 import com.burmaldabot.model.bot.BotContext;
+import com.burmaldabot.service.MessageService;
 import com.burmaldabot.telegram.TelegramSender;
 import com.burmaldabot.telegram.keyboard.TelegramKeyboardFactory;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ public class InputTopupAmountStepHandler implements UserFlowStepHandler {
     private final TelegramKeyboardFactory keyboardFactory;
     private final TelegramSender telegramSender;
     private final FlowResponseService responseService;
+    private final MessageService messageService;
 
     @Override
     public UserFlowState getSupportedState() {
@@ -40,7 +42,7 @@ public class InputTopupAmountStepHandler implements UserFlowStepHandler {
         if (!message.hasText()) {
             responseService.sendValidationError(
                     context,
-                    "Пожалуйста, введите количество токенов числом или выберите пакет кнопкой ниже:",
+                    messageService.getMessage("topup.input.prompt"),
                     keyboardFactory.createTopupPackagesKeyboard(config, pricingService)
             );
             return;
@@ -52,7 +54,7 @@ public class InputTopupAmountStepHandler implements UserFlowStepHandler {
             sessionService.save(session);
             telegramSender.sendMessage(
                     context,
-                    "❌ Пополнение баланса отменено.\n\nГлавное меню:",
+                    messageService.getMessage("topup.input.cancelled"),
                     keyboardFactory.createMainMenu()
             );
             return;
@@ -64,8 +66,7 @@ public class InputTopupAmountStepHandler implements UserFlowStepHandler {
         } catch (NumberFormatException e) {
             responseService.sendValidationError(
                     context,
-                    String.format("Некорректное число. Введите целое число токенов от %d до %d (например: 250):",
-                            config.getMinTokens(), config.getMaxTokens()),
+                    messageService.getMessage("topup.input.invalid_number", config.getMinTokens(), config.getMaxTokens()),
                     keyboardFactory.createTopupPackagesKeyboard(config, pricingService)
             );
             return;
@@ -74,8 +75,7 @@ public class InputTopupAmountStepHandler implements UserFlowStepHandler {
         if (tokens < config.getMinTokens() || tokens > config.getMaxTokens()) {
             responseService.sendValidationError(
                     context,
-                    String.format("Количество токенов должно быть от %d до %d. Попробуйте еще раз:",
-                            config.getMinTokens(), config.getMaxTokens()),
+                    messageService.getMessage("topup.input.out_of_range", config.getMinTokens(), config.getMaxTokens()),
                     keyboardFactory.createTopupPackagesKeyboard(config, pricingService)
             );
             return;
@@ -87,12 +87,8 @@ public class InputTopupAmountStepHandler implements UserFlowStepHandler {
         session.setState(UserFlowState.CONFIRMING_TOPUP);
         sessionService.save(session);
 
-        String confirmationText = String.format(
-                "🧾 **Подтверждение заказа**\n\n" +
-                        "• Выбрано токенов: **%d токенов**\n" +
-                        "• Курс: **%s %s** за токен\n" +
-                        "• Итого к оплате: **%s %s**\n\n" +
-                        "Нажмите кнопку ниже, чтобы перейти к оплате через официального бота **@CryptoBot**:",
+        String confirmationText = messageService.getMessage(
+                "topup.confirmation.card",
                 tokens,
                 config.getBasePricePerToken().toPlainString(),
                 config.getAsset(),

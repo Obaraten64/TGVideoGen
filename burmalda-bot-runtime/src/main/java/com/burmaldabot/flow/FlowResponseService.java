@@ -1,6 +1,7 @@
 package com.burmaldabot.flow;
 
 import com.burmaldabot.model.bot.BotContext;
+import com.burmaldabot.service.MessageService;
 import com.burmaldabot.telegram.TelegramSender;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +14,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 public class FlowResponseService {
 
     private final TelegramSender telegramSender;
+    private final MessageService messageService;
 
     /**
      * Sends standardized validation error with fallback keyboard to ensure the user is not left stranded.
@@ -29,7 +31,7 @@ public class FlowResponseService {
         telegramSender.answerCallbackQuery(
                 context,
                 callbackQueryId,
-                "⚠️ Это действие устарело. Пожалуйста, используйте актуальное меню внизу.",
+                messageService.getMessage("alert.stale_action"),
                 true
         );
     }

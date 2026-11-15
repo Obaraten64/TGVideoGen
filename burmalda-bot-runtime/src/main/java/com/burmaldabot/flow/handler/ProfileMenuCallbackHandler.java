@@ -4,7 +4,9 @@ import com.burmaldabot.flow.CallbackQueryHandler;
 import com.burmaldabot.flow.UserFlowState;
 import com.burmaldabot.flow.economy.UserBalanceService;
 import com.burmaldabot.flow.session.BotUserSession;
+import com.burmaldabot.flow.session.UserSessionService;
 import com.burmaldabot.model.bot.BotContext;
+import com.burmaldabot.service.MessageService;
 import com.burmaldabot.telegram.TelegramSender;
 import com.burmaldabot.telegram.keyboard.TelegramKeyboardFactory;
 import lombok.RequiredArgsConstructor;
@@ -20,9 +22,10 @@ import java.util.Set;
 public class ProfileMenuCallbackHandler implements CallbackQueryHandler {
 
     private final UserBalanceService balanceService;
-    private final com.burmaldabot.flow.session.UserSessionService sessionService;
+    private final UserSessionService sessionService;
     private final TelegramKeyboardFactory keyboardFactory;
     private final TelegramSender telegramSender;
+    private final MessageService messageService;
 
     @Override
     public boolean supports(String callbackData) {
@@ -44,16 +47,15 @@ public class ProfileMenuCallbackHandler implements CallbackQueryHandler {
         long balance = balanceService.getBalance(context.telegramUserId(), context.bot().getId());
         boolean freeTrialAvailable = !balanceService.hasUsedFreeTrial(context.telegramUserId(), context.bot().getId());
 
-        String profileText = String.format(
-                """
-                        👤 **Ваш профиль**
-                        
-                        🆔 ID: `%d`
-                        💰 Баланс: **%d токенов**
-                        🎁 Бесплатная генерация: **%s**""",
-                context.telegramUserId(),
+        String trialStatus = freeTrialAvailable
+                ? messageService.getMessage("profile.trial.status.available")
+                : messageService.getMessage("profile.trial.status.used");
+
+        String profileText = messageService.getMessage(
+                "profile.info",
+                String.valueOf(context.telegramUserId()),
                 balance,
-                freeTrialAvailable ? "Доступна ✅" : "Использована ❌"
+                trialStatus
         );
 
         telegramSender.sendMessage(

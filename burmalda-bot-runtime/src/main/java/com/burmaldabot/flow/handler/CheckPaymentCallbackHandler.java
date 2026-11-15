@@ -7,6 +7,7 @@ import com.burmaldabot.flow.economy.payment.PaymentOrderService;
 import com.burmaldabot.flow.economy.payment.PaymentStatus;
 import com.burmaldabot.flow.session.BotUserSession;
 import com.burmaldabot.model.bot.BotContext;
+import com.burmaldabot.service.MessageService;
 import com.burmaldabot.telegram.TelegramSender;
 import com.burmaldabot.telegram.keyboard.TelegramKeyboardFactory;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class CheckPaymentCallbackHandler implements CallbackQueryHandler {
     private final TelegramSender telegramSender;
     private final UserBalanceService balanceService;
     private final TelegramKeyboardFactory keyboardFactory;
+    private final MessageService messageService;
 
     @Override
     public boolean supports(String callbackData) {
@@ -53,12 +55,7 @@ public class CheckPaymentCallbackHandler implements CallbackQueryHandler {
                 long currentBalance = balanceService.getBalance(context.telegramUserId(), context.bot().getId());
                 telegramSender.sendMessage(
                         context,
-                        String.format(
-                                "🎉 **Оплата успешно подтверждена!**\n\n" +
-                                        "Текущий баланс: **%d токенов**\n\n" +
-                                        "Приятного создания видео!",
-                                currentBalance
-                        ),
+                        messageService.getMessage("payment.check.paid", currentBalance),
                         keyboardFactory.createMainMenu()
                 );
                 session.resetToMenu();
@@ -66,17 +63,14 @@ public class CheckPaymentCallbackHandler implements CallbackQueryHandler {
             case PENDING -> {
                 telegramSender.sendMessage(
                         context,
-                        "⏳ **Платеж еще не поступил.**\n\n" +
-                                "Пожалуйста, перейдите в @CryptoBot по ссылке в сообщении выше и завершите оплату. " +
-                                "После оплаты нажмите кнопку **«🔄 Проверить статус оплаты»** снова.",
+                        messageService.getMessage("payment.check.pending"),
                         null
                 );
             }
             case EXPIRED -> {
                 telegramSender.sendMessage(
                         context,
-                        "⚠️ **Срок действия этого счета истек.**\n\n" +
-                                "Пожалуйста, вернитесь в главное меню и сформируйте новый счет при необходимости.",
+                        messageService.getMessage("payment.check.expired"),
                         keyboardFactory.createMainMenu()
                 );
                 session.resetToMenu();
@@ -84,8 +78,7 @@ public class CheckPaymentCallbackHandler implements CallbackQueryHandler {
             default -> {
                 telegramSender.sendMessage(
                         context,
-                        "⚠️ **Заказ не найден или отменен.**\n\n" +
-                                "Пожалуйста, вернитесь в главное меню.",
+                        messageService.getMessage("payment.check.not_found"),
                         keyboardFactory.createMainMenu()
                 );
                 session.resetToMenu();

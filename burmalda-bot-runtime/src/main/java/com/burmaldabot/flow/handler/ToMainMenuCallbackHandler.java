@@ -5,6 +5,7 @@ import com.burmaldabot.flow.UserFlowState;
 import com.burmaldabot.flow.session.BotUserSession;
 import com.burmaldabot.flow.session.UserSessionService;
 import com.burmaldabot.model.bot.BotContext;
+import com.burmaldabot.service.MessageService;
 import com.burmaldabot.telegram.TelegramSender;
 import com.burmaldabot.telegram.keyboard.TelegramKeyboardFactory;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class ToMainMenuCallbackHandler implements CallbackQueryHandler {
     private final UserSessionService sessionService;
     private final TelegramKeyboardFactory keyboardFactory;
     private final TelegramSender telegramSender;
+    private final MessageService messageService;
 
     @Override
     public boolean supports(String callbackData) {
@@ -40,7 +42,7 @@ public class ToMainMenuCallbackHandler implements CallbackQueryHandler {
 
         telegramSender.sendMessage(
                 context,
-                "👋 **Главное меню Burmalda AI Video**\n\nВыберите действие ниже:",
+                messageService.getMessage("menu.main.return"),
                 keyboardFactory.createMainMenu()
         );
     }

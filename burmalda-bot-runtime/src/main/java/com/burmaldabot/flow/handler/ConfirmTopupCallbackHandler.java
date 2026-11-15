@@ -8,6 +8,7 @@ import com.burmaldabot.flow.economy.payment.PaymentOrderService;
 import com.burmaldabot.flow.session.BotUserSession;
 import com.burmaldabot.flow.session.UserSessionService;
 import com.burmaldabot.model.bot.BotContext;
+import com.burmaldabot.service.MessageService;
 import com.burmaldabot.telegram.TelegramSender;
 import com.burmaldabot.telegram.keyboard.TelegramKeyboardFactory;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ public class ConfirmTopupCallbackHandler implements CallbackQueryHandler {
     private final TelegramKeyboardFactory keyboardFactory;
     private final TelegramSender telegramSender;
     private final FlowResponseService responseService;
+    private final MessageService messageService;
 
     @Override
     public boolean supports(String callbackData) {
@@ -45,7 +47,7 @@ public class ConfirmTopupCallbackHandler implements CallbackQueryHandler {
             log.warn("No pending tokens found for confirmation in user session {}", session.getId());
             session.resetToMenu();
             sessionService.save(session);
-            telegramSender.sendMessage(context, "⚠️ Сессия заказа истекла. Пожалуйста, начните заново.", keyboardFactory.createMainMenu());
+            telegramSender.sendMessage(context, messageService.getMessage("topup.session_expired"), keyboardFactory.createMainMenu());
             return;
         }
 
@@ -59,17 +61,12 @@ public class ConfirmTopupCallbackHandler implements CallbackQueryHandler {
                 responseService.clearInlineMarkup(
                         context,
                         callbackQuery.getMessage().getMessageId(),
-                        "✅ Заказ подтвержден. Ссылка на оплату сформирована."
+                        messageService.getMessage("topup.confirmed_inline")
                 );
             }
 
-            String invoiceMessage = String.format(
-                    "💳 **Счет на оплату сформирован!**\n\n" +
-                            "• Сумма к оплате: **%s %s**\n" +
-                            "• К зачислению: **+%d токенов**\n" +
-                            "• Срок действия счета: **30 минут**\n\n" +
-                            "Нажмите кнопку ниже, чтобы оплатить заказ через официального бота **@CryptoBot**.\n" +
-                            "После завершения платежа токены поступят на ваш баланс автоматически!",
+            String invoiceMessage = messageService.getMessage(
+                    "topup.invoice.created",
                     order.getPriceAmount().toPlainString(),
                     order.getAsset(),
                     order.getTokensAmount()
@@ -85,7 +82,7 @@ public class ConfirmTopupCallbackHandler implements CallbackQueryHandler {
             log.error("Failed to create Crypto Pay invoice order", e);
             telegramSender.sendMessage(
                     context,
-                    "❌ Произошла ошибка при создании счета на оплату. Попробуйте еще раз позже.",
+                    messageService.getMessage("topup.invoice.error"),
                     keyboardFactory.createMainMenu()
             );
         }
